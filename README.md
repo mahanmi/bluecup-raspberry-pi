@@ -42,6 +42,8 @@ def fetch_raw_imu_data():
 
 تابع fetch_scaled_pressure برای سنسور فشار
 
+توضیحات بیشتر در مورد هر تابع در زیر آن آورده شده است
+
 
 
 
