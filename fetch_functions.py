@@ -2,7 +2,7 @@
 
 
 #MPU 6050 , ICM
-def fetch_raw_imu_data():
+def fetch_raw_imu():
 
 
     return {
@@ -15,8 +15,8 @@ def fetch_raw_imu_data():
         "xmag":0,
         "ymag":0,
         "zmag":0,
-        "id":0,
-        "temperature":0,
+        # "id":0,
+        # "temperature":0,
     }
 
 # xacc	int16_t		X acceleration (raw)
@@ -34,6 +34,7 @@ def fetch_raw_imu_data():
 
 def fetch_gps_raw_int():
     return {
+        "fix_type":3,
 
         "lat":0,
         "lon":0,
@@ -43,17 +44,28 @@ def fetch_gps_raw_int():
         "vel":65535,
         "cog":65535,
         "satellites_visible": 255,
-        "alt_ellipsoid":0,
-        "h_acc":0,
-        "v_acc":0,
-        "vel_acc":0,
-        "hdg_acc":0,
-        "yaw":0
+        # "alt_ellipsoid":0,
+        # "h_acc":0,
+        # "v_acc":0,
+        # "vel_acc":0,
+        # "hdg_acc":0,
+        # "yaw":0
 
     }
 
 
 # fix_type	uint8_t			GPS_FIX_TYPE	GPS fix type.
+# -----------------------------------------------------------------------
+# 0	GPS_FIX_TYPE_NO_GPS	No GPS connected
+# 1	GPS_FIX_TYPE_NO_FIX	No position information, GPS is connected
+# 2	GPS_FIX_TYPE_2D_FIX	2D position
+# 3	GPS_FIX_TYPE_3D_FIX	3D position
+# 4	GPS_FIX_TYPE_DGPS	DGPS/SBAS aided 3D position
+# 5	GPS_FIX_TYPE_RTK_FLOAT	RTK float, 3D position
+# 6	GPS_FIX_TYPE_RTK_FIXED	RTK Fixed, 3D position
+# 7	GPS_FIX_TYPE_STATIC	Static fixed, typically used for base stations
+# 8	GPS_FIX_TYPE_PPP	PPP, 3D position.
+# -------------------------------------------------------------------------
 # lat	int32_t	degE7			Latitude (WGS84, EGM96 ellipsoid)
 # lon	int32_t	degE7			Longitude (WGS84, EGM96 ellipsoid)
 # alt	int32_t	mm			Altitude (MSL). Positive for up. Note that virtually all GPS modules provide the MSL altitude in addition to the WGS84 altitude.
@@ -76,7 +88,7 @@ def fetch_scaled_pressure():
         "press_abs":0,
         "press_diff":0,
         "temperature":0,
-        "temperature_press_diff":0
+        # "temperature_press_diff":0
     }
 
 # press_abs	float	hPa	Absolute pressure
@@ -91,7 +103,7 @@ def fetch_scaled_pressure2():
         "press_abs":0,
         "press_diff":0,
         "temperature":0,
-        "temperature_press_diff":0
+        # "temperature_press_diff":0
     }
 
 # press_abs	float	hPa	Absolute pressure
@@ -106,7 +118,7 @@ def fetch_scaled_pressure3():
         "press_abs":0,
         "press_diff":0,
         "temperature":0,
-        "temperature_press_diff":0
+        # "temperature_press_diff":0
     }
 
 # press_abs	float	hPa	Absolute pressure
@@ -155,22 +167,21 @@ def fetch_attitude():
 
 def fetch_ekf_status_report():
     return {
+        "flags":0,
         "velocity_variance":0,
         "pos_horiz_variance":0,
         "pos_vert_variance":0,
         "compass_variance":0,
         "terrain_alt_variance":0,
-        "airspeed_variance":0,
 
 
     }
-
+# flags	uint16_t	EKF_STATUS_FLAGS	Flags.
 # velocity_variance	float		Velocity variance.
 # pos_horiz_variance	float		Horizontal Position variance.
 # pos_vert_variance	float		Vertical Position variance.
 # compass_variance	float		Compass variance.
 # terrain_alt_variance	float		Terrain Altitude variance.
-# airspeed_variance ++	float		Airspeed variance.
 
 # ----------------------------------------------------------------
 
@@ -222,7 +233,7 @@ def fetch_meminfo():
     return {
         "brkval":0,
         "freemem":0,
-        "freemem32":0
+        # "freemem32":0
     }
 
 
@@ -314,7 +325,7 @@ def fetch_scaled_imu2_data():
         "xmag":0,
         "ymag":0,
         "zmag":0,
-        "temperature":0
+        # "temperature":0
     }
 # xacc	int16_t	mG	X acceleration
 # yacc	int16_t	mG	Y acceleration
@@ -340,7 +351,7 @@ def fetch_scaled_imu3_data():
         "xmag":0,
         "ymag":0,
         "zmag":0,
-        "temperature":0
+        # "temperature":0
     }
 
 # xacc	int16_t	mG	X acceleration
@@ -356,18 +367,31 @@ def fetch_scaled_imu3_data():
 
 def fetch_simstate():
     return {
-        "roll":None,
-        "pitch":None,
-        "yaw":None,
-        "xacc":None,
-        "yacc":None,
-        "zacc":None,
-        "xgyro":None,
-        "ygyro":None,
-        "zgyro":None,
-        "lat":None,
-        "lon":None
+        "roll":0,
+        "pitch":0,
+        "yaw":0,
+        "xacc":0,
+        "yacc":0,
+        "zacc":0,
+        "xgyro":0,
+        "ygyro":0,
+        "zgyro":0,
+        "lat":0,
+        "lon":0
     }
+
+
+# roll	float	rad	Roll angle.
+# pitch	float	rad	Pitch angle.
+# yaw	float	rad	Yaw angle.
+# xacc	float	m/s/s	X acceleration.
+# yacc	float	m/s/s	Y acceleration.
+# zacc	float	m/s/s	Z acceleration.
+# xgyro	float	rad/s	Angular speed around X axis.
+# ygyro	float	rad/s	Angular speed around Y axis.
+# zgyro	float	rad/s	Angular speed around Z axis.
+# lat	int32_t	degE7	Latitude.
+# lng	int32_t	degE7	Longitude.
 
 # def fetch_system_time():
 #     return {
@@ -376,23 +400,44 @@ def fetch_simstate():
 
 def fetch_sys_status():
     return {
-        "onboard_control_sensors_present":None,
-        "onboard_control_sensors_enabled":None,
-        "onboard_control_sensors_health":None,
-        "load":None,
-        "voltage_battery":None,
-        "current_battery":None,
-        "battery_remaining":None,
-        "drop_rate_comm":None,
-        "errors_comm":None,
-        "errors_count1":None,
-        "errors_count2":None,
-        "errors_count3":None,
-        "errors_count4":None,
-        "onboard_control_sensors_present_extended":None,
-        "onboard_control_sensors_enabled_extended":None,
-        "onboard_control_sensors_health_extended":None
+        "onboard_control_sensors_present":0,
+        "onboard_control_sensors_enabled":0,
+        "onboard_control_sensors_health":0,
+        "load":0,
+        "voltage_battery":0,
+        "current_battery":0,
+        "battery_remaining":0,
+        "drop_rate_comm":0,
+        "errors_comm":0,
+        "errors_count1":0,
+        "errors_count2":0,
+        "errors_count3":0,
+        "errors_count4":0,
+        # "onboard_control_sensors_present_extended":0,
+        # "onboard_control_sensors_enabled_extended":0,
+        # "onboard_control_sensors_health_extended":0
     }
+
+
+#onboard_control_sensors_present	uint32_t		MAV_SYS_STATUS_SENSOR	Bitmap showing which onboard controllers and sensors are present. Value of 0: not present. Value of 1: present.
+# onboard_control_sensors_enabled	uint32_t		MAV_SYS_STATUS_SENSOR	Bitmap showing which onboard controllers and sensors are enabled: Value of 0: not enabled. Value of 1: enabled.
+# onboard_control_sensors_health	uint32_t		MAV_SYS_STATUS_SENSOR	Bitmap showing which onboard controllers and sensors have an error (or are operational). Value of 0: error. Value of 1: healthy.
+# load	uint16_t	d%		Maximum usage in percent of the mainloop time. Values: [0-1000] - should always be below 1000
+# voltage_battery	uint16_t	mV	invalid:UINT16_MAX	Battery voltage, UINT16_MAX: Voltage not sent by autopilot
+# current_battery	int16_t	cA	invalid:-1	Battery current, -1: Current not sent by autopilot
+# battery_remaining	int8_t	%	invalid:-1	Battery energy remaining, -1: Battery remaining energy not sent by autopilot
+# drop_rate_comm	uint16_t	c%		Communication drop rate, (UART, I2C, SPI, CAN), dropped packets on all links (packets that were corrupted on reception on the MAV)
+# errors_comm	uint16_t			Communication errors (UART, I2C, SPI, CAN), dropped packets on all links (packets that were corrupted on reception on the MAV)
+# errors_count1	uint16_t			Autopilot-specific errors
+# errors_count2	uint16_t			Autopilot-specific errors
+# errors_count3	uint16_t			Autopilot-specific errors
+# errors_count4	uint16_t			Autopilot-specific errors
+# onboard_control_sensors_present_extended ++	uint32_t		MAV_SYS_STATUS_SENSOR_EXTENDED	Bitmap showing which onboard controllers and sensors are present. Value of 0: not present. Value of 1: present.
+# onboard_control_sensors_enabled_extended ++	uint32_t		MAV_SYS_STATUS_SENSOR_EXTENDED	Bitmap showing which onboard controllers and sensors are enabled: Value of 0: not enabled. Value of 1: enabled.
+# onboard_control_sensors_health_extended ++	uint32_t		MAV_SYS_STATUS_SENSOR_EXTENDED	Bitmap showing which onboard controllers and sensors have an error (or are operational). Value of 0: error. Value of 1: healthy.
+
+
+
 def fetch_terrain_report():
     return {
         "lat":None,
@@ -423,10 +468,19 @@ def fetch_vfr_hud():
 
 def fetch_vibration():
     return {
-        "vibration_x":None,
-        "vibration_y":None,
-        "vibration_z":None,
-        "clipping_0":None,
-        "clipping_1":None,
-        "clipping_2":None,
+        "vibration_x":0,
+        "vibration_y":0,
+        "vibration_z":0,
+        "clipping_0":0,
+        "clipping_1":0,
+        "clipping_2":0,
     }
+
+
+
+# vibration_x	float		Vibration levels on X-axis
+# vibration_y	float		Vibration levels on Y-axis
+# vibration_z	float		Vibration levels on Z-axis
+# clipping_0	uint32_t		first accelerometer clipping count
+# clipping_1	uint32_t		second accelerometer clipping count
+# clipping_2	uint32_t		third accelerometer clipping count
