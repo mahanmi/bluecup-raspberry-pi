@@ -307,8 +307,16 @@ def fetch_power_status():
 # Vservo	uint16_t	mV		Servo rail voltage.
 # flags	uint16_t		MAV_POWER_STATUS	Bitmap of power supply status flags.
 
-def motor_control(rc1,rc2,rc3,rc4,rc5,rc6,rc7,rc8,rc9,rc10,rc11,rc12,rc13,rc14,rc15,rc16,rc17,rc18):
+def motor_control(rc1,rc2,rc3,rc4,rc5,rc6):
     pass
+    #هر کانال حاوی یک اینتیجر است که فرکانس سرعت را تعیین می‌کند
+    #کانال ۱ برای roll است
+    #کانال ۲ برای pitch است
+    # کانال ۳ برای throttle است
+    #کانال ۴ برای yaw است
+    #کانال ۵ برای forward است (حرکت رو به جلو و عقب)
+    #کانال ۶ برای lateral است (حرکت چپ و راست)
+
 
 
 
