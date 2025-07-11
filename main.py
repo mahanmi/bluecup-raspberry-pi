@@ -7,7 +7,7 @@ import message_builder
 
 
 client = mavutil.mavlink_connection(
-    device='udpin:0.0.0.0:14604', dialect=mavlink.DIALECT)
+    device='udpout:0.0.0.0:14604', dialect=mavlink.DIALECT)
 
 
 events: Dict[int, tuple[mavutil.periodic_event, Callable[[], mavlink.MAVLink_message]]] = {
@@ -64,7 +64,6 @@ handlers = {
 }
 
 commands = {
-    mavlink.MAV_CMD_SET_MESSAGE_INTERVAL: command_handler.set_message_interval,
     mavlink.MAV_CMD_SET_CAMERA_ZOOM: command_handler.set_camera_zoom,
     mavlink.MAV_CMD_SET_CAMERA_FOCUS: command_handler.set_camera_focus,
     mavlink.MAV_CMD_COMPONENT_ARM_DISARM: command_handler.component_arm_disarm,
@@ -78,9 +77,27 @@ commands = {
 }
 
 while True:
-    msg = client.recv_msg()
-    if msg is not None and msg.message_type in handlers:
-        handlers[msg.message_type](msg)
+    msg: mavlink.MAVLink_message = client.recv_msg()
+    if msg is not None:
+        if (msg.id == mavlink.MAVLINK_MSG_ID_COMMAND_INT or msg.id == mavlink.MAVLINK_MSG_ID_COMMAND_LONG):
+            if msg.command == mavlink.MAV_CMD_SET_MESSAGE_INTERVAL:
+                if msg.param1 in events:
+                    _event, action = events[msg.param1]
+                    events[msg.param1] = (
+                        mavutil.periodic_event(msg.param2),
+                        action
+                    )
+
+                    client.mav.command_ack_send(
+                        msg.id, mavlink.MAV_RESULT_ACCEPTED)
+            if msg.command not in commands:
+                client.mav.command_ack_send(msg.id, mavlink.MAV_RESULT_DENIED)
+                continue
+
+            commands[msg.command](client.mav, msg)
+
+        if msg.message_type in handlers:
+            handlers[msg.id](client.mav, msg)
 
     for id, (event, action) in events.items():
         if event.trigger():
