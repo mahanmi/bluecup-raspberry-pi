@@ -1,23 +1,23 @@
 from pymavlink.dialects.v20 import ardupilotmega as mavlink
 
 
-def set_camera_zoom(client: mavlink.MAVLink, msg: mavlink.MAVLink_command_int_message):
+def set_camera_zoom(client: mavlink.MAVLink, msg: mavlink.MAVLink_command_long_message):
     pass
 
 
-def set_camera_focus(client: mavlink.MAVLink, msg: mavlink.MAVLink_command_int_message):
+def set_camera_focus(client: mavlink.MAVLink, msg: mavlink.MAVLink_command_long_message):
     pass
 
 
-def component_arm_disarm(client: mavlink.MAVLink, msg: mavlink.MAVLink_command_int_message):
+def component_arm_disarm(client: mavlink.MAVLink, msg: mavlink.MAVLink_command_long_message):
     pass
 
 
-def nav_takeoff(client: mavlink.MAVLink, msg: mavlink.MAVLink_command_int_message):
+def nav_takeoff(client: mavlink.MAVLink, msg: mavlink.MAVLink_command_long_message):
     pass
 
 
-def do_set_home(client: mavlink.MAVLink, msg: mavlink.MAVLink_command_int_message):
+def do_set_home(client: mavlink.MAVLink, msg: mavlink.MAVLink_command_long_message):
     pass
 
 
@@ -25,7 +25,7 @@ def do_reposition(client: mavlink.MAVLink, msg: mavlink.MAVLink_command_int_mess
     pass
 
 
-def request_message(client: mavlink.MAVLink, msg: mavlink.MAVLink_command_int_message):
+def request_message(client: mavlink.MAVLink, msg: mavlink.MAVLink_command_long_message):
     pass
 
 
@@ -33,7 +33,7 @@ def get_home_position(client: mavlink.MAVLink, msg: mavlink.MAVLink_command_int_
     pass
 
 
-def mission_start(client: mavlink.MAVLink, msg: mavlink.MAVLink_command_int_message):
+def mission_start(client: mavlink.MAVLink, msg: mavlink.MAVLink_command_long_message):
     pass
 
 
