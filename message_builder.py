@@ -573,7 +573,7 @@ def send_fence_status() -> mavlink.MAVLink_fence_status_message:
 # 2	FENCE_MITIGATE_VEL_LIMIT	Velocity limiting active to prevent breach
 # -------------------------------------------------------------
 
-def send_servo_output() -> mavlink.MAVLink_servo_output_raw_message:
+def send_servo_output_raw() -> mavlink.MAVLink_servo_output_raw_message:
     return mavlink.MAVLink_servo_output_raw_message(
         time_usec=time_usec_handler(),
         port=0,
@@ -621,6 +621,24 @@ def send_rc_channels()->mavlink.MAVLink_rc_channels_message:
         time_boot_ms=time_boot_handler(),
         chancount=0,
         chan1_raw=0,
+        chan2_raw=0,
+        chan3_raw=0,
+        chan4_raw=0,
+        chan5_raw=0,
+        chan6_raw=0,
+        chan7_raw=0,
+        chan8_raw=0,
+        chan9_raw=0,
+        chan10_raw=0,
+        chan11_raw=0,
+        chan12_raw=0,
+        chan13_raw=0,
+        chan14_raw=0,
+        chan15_raw=0,
+        chan16_raw=0,
+        chan17_raw=0,
+        chan18_raw=0,
+        rssi=0,
 
 
 
