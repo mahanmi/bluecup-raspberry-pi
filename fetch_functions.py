@@ -1,23 +1,26 @@
-
+from utils.time_handlers import *
+from pymavlink.dialects.v20 import ardupilotmega as mavlink
 
 
 #MPU 6050 , ICM
-def fetch_raw_imu():
+def fetch_raw_imu()->mavlink.MAVLink_raw_imu_message:
 
 
-    return {
-        "xacc":0,
-        "yacc":0,
-        "zacc":0,
-        "xgyro":0,
-        "ygyro":0,
-        "zgyro":0,
-        "xmag":0,
-        "ymag":0,
-        "zmag":0,
-        # "id":0,
-        # "temperature":0,
-    }
+    return mavlink.MAVLink_raw_imu_message(
+        time_usec=time_usec_handler(),
+        xacc=65535,
+        yacc=65535,
+        zacc=65535,
+        xgyro=65535,
+        ygyro=65535,
+        zgyro=65535,
+        xmag=65535,
+        ymag=65535,
+        zmag=65535,
+        id=65535,
+        temperature=65535
+
+    )
 
 # xacc	int16_t		X acceleration (raw)
 # yacc	int16_t		Y acceleration (raw)
@@ -32,26 +35,26 @@ def fetch_raw_imu():
 # Messages with same value are from the same source (instance).
 # temperature ++	int16_t	cdegC	Temperature, 0: IMU does not provide temperature values. If the IMU is at 0C it must send 1 (0.01C).
 
-def fetch_gps_raw_int():
-    return {
-        "fix_type":3,
+def fetch_gps_raw_int()->mavlink.MAVLink_gps_raw_int_message:
+    return mavlink.MAVLink_gps_raw_int_message(
+        time_usec=time_usec_handler(),
+        fix_type=0, #change this based on your gps state
+        lat=0,
+        lon=0,
+        alt=0,
+        eph=65535,
+        epv=65535,
+        vel=65535,
+        cog=65535,
+        satellites_visible=255,
+        alt_ellipsoid=4294967295,
+        h_acc=4294967295,
+        v_acc=4294967295,
+        vel_acc=4294967295,
+        hdg_acc=4294967295,
+        yaw=65535
 
-        "lat":0,
-        "lon":0,
-        "alt":0,
-        "eph":65535,
-        "epv":65535,
-        "vel":65535,
-        "cog":65535,
-        "satellites_visible": 255,
-        # "alt_ellipsoid":0,
-        # "h_acc":0,
-        # "v_acc":0,
-        # "vel_acc":0,
-        # "hdg_acc":0,
-        # "yaw":0
-
-    }
+    )
 
 
 # fix_type	uint8_t			GPS_FIX_TYPE	GPS fix type.
@@ -82,29 +85,16 @@ def fetch_gps_raw_int():
 # yaw ++	uint16_t	cdeg		invalid:0	Yaw in earth frame from north. Use 0 if this GPS does not provide yaw. Use UINT16_MAX if this GPS is configured to provide yaw and is currently unable to provide it. Use 36000 for north.
 
 
-def fetch_scaled_pressure():
+def fetch_scaled_pressure() -> mavlink.MAVLink_scaled_pressure_message:
 
-    return {
-        "press_abs":0,
-        "press_diff":0,
-        "temperature":0,
-        # "temperature_press_diff":0
-    }
+    return mavlink.MAVLink_scaled_pressure_message(
+        time_boot_ms=time_boot_handler(),
+        press_abs=0,
+        press_diff=0,
+        temperature=0,
+        temperature_press_diff=0
 
-# press_abs	float	hPa	Absolute pressure
-# press_diff	float	hPa	Differential pressure 1
-# temperature	int16_t	cdegC	Absolute pressure temperature
-# temperature_press_diff ++	int16_t	cdegC	Differential pressure te
-
-
-def fetch_scaled_pressure2():
-
-    return {
-        "press_abs":0,
-        "press_diff":0,
-        "temperature":0,
-        # "temperature_press_diff":0
-    }
+    )
 
 # press_abs	float	hPa	Absolute pressure
 # press_diff	float	hPa	Differential pressure 1
@@ -112,14 +102,32 @@ def fetch_scaled_pressure2():
 # temperature_press_diff ++	int16_t	cdegC	Differential pressure te
 
 
-def fetch_scaled_pressure3():
+def fetch_scaled_pressure2()->mavlink.MAVLink_scaled_pressure2_message:
 
-    return {
-        "press_abs":0,
-        "press_diff":0,
-        "temperature":0,
-        # "temperature_press_diff":0
-    }
+    return mavlink.MAVLink_scaled_pressure2_message(
+        time_boot_ms=time_boot_handler(),
+        press_abs=0,
+        press_diff=0,
+        temperature=0,
+        temperature_press_diff=0
+
+    )
+
+# press_abs	float	hPa	Absolute pressure
+# press_diff	float	hPa	Differential pressure 1
+# temperature	int16_t	cdegC	Absolute pressure temperature
+# temperature_press_diff ++	int16_t	cdegC	Differential pressure te
+
+
+def fetch_scaled_pressure3()->mavlink.MAVLink_scaled_pressure3_message:
+
+    return mavlink.MAVLink_scaled_pressure3_message(
+        time_boot_ms=time_boot_handler(),
+        press_abs=0,
+        press_diff=0,
+        temperature=0,
+        temperature_press_diff=0
+    )
 
 # press_abs	float	hPa	Absolute pressure
 # press_diff	float	hPa	Differential pressure 1
@@ -128,15 +136,16 @@ def fetch_scaled_pressure3():
 
 
 
-def fetch_ahrs2():
-    return {
-        "roll":0,
-        "pitch":0,
-        "yaw":0,
-        "altitude":0,
-        "lat":0,
-        "lng":0
-    }
+def fetch_ahrs2()->mavlink.MAVLink_ahrs2_message:
+    return mavlink.MAVLink_ahrs2_message(
+        roll=0,
+        pitch=0,
+        yaw=0,
+        altitude=0,
+        lat=0,
+        lng=0
+
+    )
 # roll	float	rad	Roll angle.
 # pitch	float	rad	Pitch angle.
 # yaw	float	rad	Yaw angle.
@@ -146,16 +155,17 @@ def fetch_ahrs2():
 
 # ----------------------------------------------------------
 
-def fetch_attitude():
-    return {
-        "roll":0,
-        "pitch":0,
-        "yaw":0,
-        "rollspeed":0,
-        "pitchspeed":0,
-        "yawspeed":0
+def fetch_attitude()->mavlink.MAVLink_attitude_message:
+    return mavlink.MAVLink_attitude_message(
+        time_boot_ms=time_boot_handler(),
+        roll=0,
+        pitch=0,
+        yaw=0,
+        rollspeed=0,
+        pitchspeed=0,
+        yawspeed=0
 
-    }
+    )
 # roll	float	rad	Roll angle (-pi..+pi)
 # pitch	float	rad	Pitch angle (-pi..+pi)
 # yaw	float	rad	Yaw angle (-pi..+pi)
@@ -165,18 +175,33 @@ def fetch_attitude():
 
 #---------------------------------------------------------------
 
-def fetch_ekf_status_report():
-    return {
-        "flags":0,
-        "velocity_variance":0,
-        "pos_horiz_variance":0,
-        "pos_vert_variance":0,
-        "compass_variance":0,
-        "terrain_alt_variance":0,
+def fetch_ekf_status_report()->mavlink.MAVLink_ekf_status_report_message:
+    return mavlink.MAVLink_ekf_status_report_message(
+        flags=1,
+        velocity_variance=0,
+        pos_vert_variance=0,
+        pos_horiz_variance=0,
+        compass_variance=0,
+        terrain_alt_variance=0,
+        airspeed_variance=0
 
 
-    }
+    )
 # flags	uint16_t	EKF_STATUS_FLAGS	Flags.
+# ----------------------------------------------------------
+# 1	EKF_ATTITUDE	Set if EKF's attitude estimate is good.
+# 2	EKF_VELOCITY_HORIZ	Set if EKF's horizontal velocity estimate is good.
+# 4	EKF_VELOCITY_VERT	Set if EKF's vertical velocity estimate is good.
+# 8	EKF_POS_HORIZ_REL	Set if EKF's horizontal position (relative) estimate is good.
+# 16	EKF_POS_HORIZ_ABS	Set if EKF's horizontal position (absolute) estimate is good.
+# 32	EKF_POS_VERT_ABS	Set if EKF's vertical position (absolute) estimate is good.
+# 64	EKF_POS_VERT_AGL	Set if EKF's vertical position (above ground) estimate is good.
+# 128	EKF_CONST_POS_MODE	EKF is in constant position mode and does not know it's absolute or relative position.
+# 256	EKF_PRED_POS_HORIZ_REL	Set if EKF's predicted horizontal position (relative) estimate is good.
+# 512	EKF_PRED_POS_HORIZ_ABS	Set if EKF's predicted horizontal position (absolute) estimate is good.
+# 1024	EKF_UNINITIALIZED	Set if EKF has never been healthy.
+# 32768	EKF_GPS_GLITCHING	Set if EKF believes the GPS input data is faulty.
+# -----------------------------------------------------------------------------------------------
 # velocity_variance	float		Velocity variance.
 # pos_horiz_variance	float		Horizontal Position variance.
 # pos_vert_variance	float		Vertical Position variance.
@@ -185,18 +210,19 @@ def fetch_ekf_status_report():
 
 # ----------------------------------------------------------------
 
-def fetch_global_position_int():
-    return {
-        "lat":0,
-        "lon":0,
-        "alt":0,
-        "relative_alt":0,
-        "vx":0,
-        "vy":0,
-        "vz":0,
-        "hdg":65535
+def fetch_global_position_int()->mavlink.MAVLink_global_position_int_message:
+    return mavlink.MAVLink_global_position_int_message(
+        time_boot_ms=time_boot_handler(),
+        lat=0,
+        lon=0,
+        alt=0,
+        relative_alt=0,
+        vx=0,
+        vy=0,
+        vz=0,
+        hdg=65535
 
-    }
+    )
 
 
 # lat	int32_t	degE7	Latitude, expressed
@@ -210,16 +236,17 @@ def fetch_global_position_int():
 
 
 
-def fetch_local_position_ned():
-    return {
-        "x":0,
-        "y":0,
-        "z":0,
-        "vx":0,
-        "vy":0,
-        "vz":0
+def fetch_local_position_ned()->mavlink.MAVLink_local_position_ned_message:
+    return mavlink.MAVLink_local_position_ned_message(
+        time_boot_ms=time_boot_handler(),
+        x=0,
+        y=0,
+        z=0,
+        vx=0,
+        vy=0,
+        vz=0
 
-    }
+    )
 
 # x	float	m	X Position
 # y	float	m	Y Position
@@ -229,12 +256,12 @@ def fetch_local_position_ned():
 # vz	float	m/s	Z Speed
 
 
-def fetch_meminfo():
-    return {
-        "brkval":0,
-        "freemem":0,
-        # "freemem32":0
-    }
+def fetch_meminfo()->mavlink.MAVLink_meminfo_message:
+    return mavlink.MAVLink_meminfo_message(
+        brkval=0,
+        freemem=0,
+        freemem32=0
+    )
 
 
 # brkval	uint16_t		Heap top.
@@ -243,17 +270,14 @@ def fetch_meminfo():
 
 
 
-def fetch_mission_current():
-    return {
-        "seq":0,
-        "total":65535,
-        "mission_state":0,
-        "mission_mode":0,
-        "mission_id":0,
-        "fence_id":0,
-        "rally_points_id":0
-    }
+def fetch_mission_current()->mavlink.MAVLink_mission_current_message:
+    return mavlink.MAVLink_mission_current_message(
+        seq=0,
+        total=65535,
+        mission_state=0,
+        mission_mode=0,
 
+    )
 # seq	uint16_t		Sequence
 # total ++	uint16_t	invalid:UINT16_MAX	Total number of mission items on vehicle (on last item, sequence == total). If the autopilot stores its home location as part of the mission this will be excluded from the total. 0: Not supported, UINT16_MAX if no mission is present on the vehicle.
 # mission_state ++	uint8_t	invalid:0 MISSION_STATE	Mission state machine state. MISSION_STATE_UNKNOWN if state reporting not supported.
@@ -262,11 +286,12 @@ def fetch_mission_current():
 # fence_id ++	uint32_t	invalid:0	Id of current on-vehicle fence plan, or 0 if IDs are not supported or there is no fence loaded. GCS can use this to track changes to the fence plan type. The same value is returned on fence upload (in the MISSION_ACK).
 # rally_points_id ++	uint32_t	invalid:0	Id of current on-vehicle rally point plan, or 0 if IDs are not supported or there are no rally points loaded. GCS can use this to track changes to the rally point plan type. The same value is returned on rally point upload (in the MISSION_ACK).
 
-def fetch_named_value_float():
-    return {
-        "name":"",
-        "value":0
-    }
+def fetch_named_value_float()->mavlink.MAVLink_named_value_float_message:
+    return mavlink.MAVLink_named_value_float_message(
+        time_boot_ms=time_boot_handler(),
+        name=b"",
+        value=0
+    )
 
 # name	char[10]		Name of the debug variable
 # Messages with same value are from the same source (instance).
@@ -274,18 +299,19 @@ def fetch_named_value_float():
 
 
 
-def fetch_nav_controller_output():
-    return {
-        "nav_roll":0,
-        "nav_pitch":0,
-        "nav_bearing":0,
-        "target_bearing":0,
-        "wp_dist":0,
-        "alt_error":0,
-        "aspd_error":0,
-        "xtrack_error":0
-    }
+def fetch_nav_controller_output()->mavlink.MAVLink_nav_controller_output_message:
+    return mavlink.MAVLink_nav_controller_output_message(
+        nav_roll=0,
+        nav_pitch=0,
+        nav_bearing=0,
+        target_bearing=0,
+        wp_dist=0,
+        alt_error=0,
+        aspd_error=0,
+        xtrack_error=0
 
+
+    )
 # nav_roll	float	deg	Current desired roll
 # nav_pitch	float	deg	Current desired pitch
 # nav_bearing	int16_t	deg	Current desired heading
@@ -296,16 +322,25 @@ def fetch_nav_controller_output():
 # xtrack_error	float	m	Current crosstrack error on x-y plane
 
 
-def fetch_power_status():
-    return {
-        "Vcc":0,
-        "Vservo":0,
-        "flags":0
-    }
+def fetch_power_status()->mavlink.MAVLink_power_status_message:
+    return mavlink.MAVLink_power_status_message(
+        Vcc=0,
+        Vservo=0,
+        flags=0
+
+    )
 
 # Vcc	uint16_t	mV		5V rail voltage.
 # Vservo	uint16_t	mV		Servo rail voltage.
 # flags	uint16_t		MAV_POWER_STATUS	Bitmap of power supply status flags.
+# -------------------------------------------------------------------------------
+# 1	MAV_POWER_STATUS_BRICK_VALID	main brick power supply valid
+# 2	MAV_POWER_STATUS_SERVO_VALID	main servo power supply valid for FMU
+# 4	MAV_POWER_STATUS_USB_CONNECTED	USB power is connected
+# 8	MAV_POWER_STATUS_PERIPH_OVERCURRENT	peripheral supply is in over-current state
+# 16	MAV_POWER_STATUS_PERIPH_HIPOWER_OVERCURRENT	hi-power peripheral supply is in over-current state
+# 32	MAV_POWER_STATUS_CHANGED	Power status has changed since boot
+# -------------------------------------------------------------------------------
 
 def motor_control(rc1,rc2,rc3,rc4,rc5,rc6):
     pass
@@ -320,21 +355,22 @@ def motor_control(rc1,rc2,rc3,rc4,rc5,rc6):
 
 
 
-def fetch_scaled_imu2_data():
+def fetch_scaled_imu2()->mavlink.MAVLink_scaled_imu2_message:
 
 
-    return {
-        "xacc":0,
-        "yacc":0,
-        "zacc":0,
-        "xgyro":0,
-        "ygyro":0,
-        "zgyro":0,
-        "xmag":0,
-        "ymag":0,
-        "zmag":0,
-        # "temperature":0
-    }
+    return mavlink.MAVLink_scaled_imu2_message(
+        time_boot_ms=time_boot_handler(),
+        xacc=65535,
+        yacc=65535,
+        zacc=65535,
+        xgyro=65535,
+        ygyro=65535,
+        zgyro=65535,
+        xmag=65535,
+        ymag=65535,
+        zmag=65535,
+        temperature=65535
+    )
 # xacc	int16_t	mG	X acceleration
 # yacc	int16_t	mG	Y acceleration
 # zacc	int16_t	mG	Z acceleration
@@ -346,21 +382,23 @@ def fetch_scaled_imu2_data():
 # zmag	int16_t	mgauss	Z Magnetic field
 # temperature ++	int16_t	cdegC	Temperature, 0: IMU does not provide temperature values. If the IMU is at 0C it must send 1 (0.01C).
 
-def fetch_scaled_imu3_data():
+def fetch_scaled_imu3_data()->mavlink.MAVLink_scaled_imu3_message:
 
 
-    return {
-        "xacc":0,
-        "yacc":0,
-        "zacc":0,
-        "xgyro":0,
-        "ygyro":0,
-        "zgyro":0,
-        "xmag":0,
-        "ymag":0,
-        "zmag":0,
-        # "temperature":0
-    }
+    return mavlink.MAVLink_scaled_imu3_message(
+        time_boot_ms=time_boot_handler(),
+        xacc=65535,
+        yacc=65535,
+        zacc=65535,
+        xgyro=65535,
+        ygyro=65535,
+        zgyro=65535,
+        xmag=65535,
+        ymag=65535,
+        zmag=65535,
+        temperature=65535
+
+    )
 
 # xacc	int16_t	mG	X acceleration
 # yacc	int16_t	mG	Y acceleration
@@ -373,20 +411,20 @@ def fetch_scaled_imu3_data():
 # zmag	int16_t	mgauss	Z Magnetic field
 # temperature ++	int16_t	cdegC	Temperature, 0: IMU does not provide temperature values. If the IMU is at 0C it must send 1 (0.01C).
 
-def fetch_simstate():
-    return {
-        "roll":0,
-        "pitch":0,
-        "yaw":0,
-        "xacc":0,
-        "yacc":0,
-        "zacc":0,
-        "xgyro":0,
-        "ygyro":0,
-        "zgyro":0,
-        "lat":0,
-        "lon":0
-    }
+def fetch_simstate()->mavlink.MAVLink_simstate_message:
+    return mavlink.MAVLink_simstate_message(
+        roll=0,
+        pitch=0,
+        yaw=0,
+        xacc=0,
+        yacc=0,
+        zacc=0,
+        xgyro=0,
+        ygyro=0,
+        zgyro=0,
+        lat=0,
+        lng=0
+    )
 
 
 # roll	float	rad	Roll angle.
@@ -406,25 +444,25 @@ def fetch_simstate():
 #         "time_unix_usec":None,
 #     }
 
-def fetch_sys_status():
-    return {
-        "onboard_control_sensors_present":0,
-        "onboard_control_sensors_enabled":0,
-        "onboard_control_sensors_health":0,
-        "load":0,
-        "voltage_battery":0,
-        "current_battery":0,
-        "battery_remaining":0,
-        "drop_rate_comm":0,
-        "errors_comm":0,
-        "errors_count1":0,
-        "errors_count2":0,
-        "errors_count3":0,
-        "errors_count4":0,
-        # "onboard_control_sensors_present_extended":0,
-        # "onboard_control_sensors_enabled_extended":0,
-        # "onboard_control_sensors_health_extended":0
-    }
+def fetch_sys_status()->mavlink.MAVLink_sys_status_message:
+    return mavlink.MAVLink_sys_status_message(
+        onboard_control_sensors_present=4294967295,
+        onboard_control_sensors_enabled=4294967295,
+        onboard_control_sensors_health=4294967295,
+        load=65535,
+        voltage_battery=65535,
+        current_battery=-1,
+        battery_remaining=-1,
+        drop_rate_comm=65535,
+        errors_comm=65535,
+        errors_count1=65535,
+        errors_count2=65535,
+        errors_count3=65535,
+        errors_count4=65535,
+
+
+
+    )
 
 
 #onboard_control_sensors_present	uint32_t		MAV_SYS_STATUS_SENSOR	Bitmap showing which onboard controllers and sensors are present. Value of 0: not present. Value of 1: present.
@@ -446,26 +484,27 @@ def fetch_sys_status():
 
 
 
-def fetch_terrain_report():
-    return {
-        "lat":None,
-        "lon":None,
-        "spacing":None,
-        "terrain_height":None,
-        "current_height":None,
-        "pending":None,
-        "loaded":None
-    }
+def fetch_terrain_report()->mavlink.MAVLink_terrain_report_message:
+    return mavlink.MAVLink_terrain_report_message(
+        lat=0,
+        lon=0,
+        spacing=0,
+        terrain_height=0,
+        current_height=0,
+        pending=0,
+        loaded=0
 
-def fetch_vfr_hud():
-    return {
-        "airspeed":0,
-        "groundspeed":0,
-        "heading":0,
-        "throttle":0,
-        "alt":0,
-        "climb":0
-    }
+    )
+
+def fetch_vfr_hud()->mavlink.MAVLink_vfr_hud_message:
+    return mavlink.MAVLink_vfr_hud_message(
+        airspeed=0,
+        groundspeed=0,
+        heading=0,
+        throttle=0,
+        alt=0,
+        climb=0
+    )
 
 # airspeed	float	m/s	Vehicle speed in form appropriate for vehicle type. For standard aircraft this is typically calibrated airspeed (CAS) or indicated airspeed (IAS) - either of which can be used by a pilot to estimate stall speed.
 # groundspeed	float	m/s	Current ground speed.
@@ -474,15 +513,17 @@ def fetch_vfr_hud():
 # alt	float	m	Current altitude (MSL).
 # climb	float	m/s	Current climb rate.
 
-def fetch_vibration():
-    return {
-        "vibration_x":0,
-        "vibration_y":0,
-        "vibration_z":0,
-        "clipping_0":0,
-        "clipping_1":0,
-        "clipping_2":0,
-    }
+def fetch_vibration()->mavlink.MAVLink_vibration_message:
+    return mavlink.MAVLink_vibration_message(
+        time_usec=time_usec_handler(),
+        vibration_x=0,
+        vibration_y=0,
+        vibration_z=0,
+        clipping_0=0,
+        clipping_1=0,
+        clipping_2=0
+
+    )
 
 
 
