@@ -926,8 +926,7 @@ def send_battery_status() -> mavlink.MAVLink_battery_status_message:
 # ------------------------------------------------------------------------------
 
 
-
-def send_gimbal_device_attitude_status()->mavlink.MAVLink_gimbal_device_attitude_status_message:
+def send_gimbal_device_attitude_status() -> mavlink.MAVLink_gimbal_device_attitude_status_message:
     return mavlink.MAVLink_gimbal_device_attitude_status_message(
         target_system=0,
         target_component=0,
@@ -984,7 +983,8 @@ def send_gimbal_device_attitude_status()->mavlink.MAVLink_gimbal_device_attitude
 # delta_yaw_velocity ++	float	rad/s	invalid:NAN	Yaw angular velocity relating the angular velocities in earth and body frames (see message description). NaN if unknown.
 # gimbal_device_id ++	uint8_t		invalid:0	This field is to be used if the gimbal manager and the gimbal device are the same component and hence have the same component ID. This field is then set a number between 1-6. If the component ID is separate, this field is not required and must be set to 0.
 
-def send_mag_cal_report()->mavlink.MAVLink_mag_cal_report_message:
+
+def send_mag_cal_report() -> mavlink.MAVLink_mag_cal_report_message:
     return mavlink.MAVLink_mag_cal_report_message(
         compass_id=0,
         cal_mask=0,
@@ -1078,7 +1078,8 @@ def send_mag_cal_report()->mavlink.MAVLink_mag_cal_report_message:
 # new_orientation ++	uint8_t		MAV_SENSOR_ORIENTATION	orientation after calibration.
 # scale_factor ++	float			field radius correction factor
 
-def send_mag_cal_progress()->mavlink.MAVLink_mag_cal_progress_message:
+
+def send_mag_cal_progress() -> mavlink.MAVLink_mag_cal_progress_message:
     return mavlink.MAVLink_mag_cal_progress_message(
         compass_id=0,
         cal_mask=0,
@@ -1104,7 +1105,7 @@ def send_mag_cal_progress()->mavlink.MAVLink_mag_cal_progress_message:
 # direction_z	float			Body frame direction vector for display.
 
 
-def send_param_value()->mavlink.MAVLink_param_value_message:
+def send_param_value() -> mavlink.MAVLink_param_value_message:
     return mavlink.MAVLink_param_value_message(
         param_id=0,
         param_value=0,
