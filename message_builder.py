@@ -1,11 +1,18 @@
-from utils.time_handlers import *
 from pymavlink.dialects.v20 import ardupilotmega as mavlink
 
-
-#MPU 6050 , ICM
-def fetch_raw_imu()->mavlink.MAVLink_raw_imu_message:
+from utils.time_handlers import *
 
 
+def send_heartbeat() -> mavlink.MAVLink_heartbeat_message:
+    return mavlink.MAVLink_heartbeat_message(
+        mavlink.MAV_TYPE_SUBMARINE,
+        mavlink.MAV_AUTOPILOT_GENERIC,
+        0, 0, 0, 0
+    )
+
+
+# MPU 6050 , ICM
+def send_raw_imu() -> mavlink.MAVLink_raw_imu_message:
     return mavlink.MAVLink_raw_imu_message(
         time_usec=time_usec_handler(),
         xacc=65535,
@@ -22,6 +29,7 @@ def fetch_raw_imu()->mavlink.MAVLink_raw_imu_message:
 
     )
 
+
 # xacc	int16_t		X acceleration (raw)
 # yacc	int16_t		Y acceleration (raw)
 # zacc	int16_t		Z acceleration (raw)
@@ -35,10 +43,10 @@ def fetch_raw_imu()->mavlink.MAVLink_raw_imu_message:
 # Messages with same value are from the same source (instance).
 # temperature ++	int16_t	cdegC	Temperature, 0: IMU does not provide temperature values. If the IMU is at 0C it must send 1 (0.01C).
 
-def fetch_gps_raw_int()->mavlink.MAVLink_gps_raw_int_message:
+def send_gps_raw_int() -> mavlink.MAVLink_gps_raw_int_message:
     return mavlink.MAVLink_gps_raw_int_message(
         time_usec=time_usec_handler(),
-        fix_type=0, #change this based on your gps state
+        fix_type=0,  # change this based on your gps state
         lat=0,
         lon=0,
         alt=0,
@@ -85,8 +93,7 @@ def fetch_gps_raw_int()->mavlink.MAVLink_gps_raw_int_message:
 # yaw ++	uint16_t	cdeg		invalid:0	Yaw in earth frame from north. Use 0 if this GPS does not provide yaw. Use UINT16_MAX if this GPS is configured to provide yaw and is currently unable to provide it. Use 36000 for north.
 
 
-def fetch_scaled_pressure() -> mavlink.MAVLink_scaled_pressure_message:
-
+def send_scaled_pressure() -> mavlink.MAVLink_scaled_pressure_message:
     return mavlink.MAVLink_scaled_pressure_message(
         time_boot_ms=time_boot_handler(),
         press_abs=0,
@@ -96,14 +103,14 @@ def fetch_scaled_pressure() -> mavlink.MAVLink_scaled_pressure_message:
 
     )
 
+
 # press_abs	float	hPa	Absolute pressure
 # press_diff	float	hPa	Differential pressure 1
 # temperature	int16_t	cdegC	Absolute pressure temperature
 # temperature_press_diff ++	int16_t	cdegC	Differential pressure te
 
 
-def fetch_scaled_pressure2()->mavlink.MAVLink_scaled_pressure2_message:
-
+def send_scaled_pressure2() -> mavlink.MAVLink_scaled_pressure2_message:
     return mavlink.MAVLink_scaled_pressure2_message(
         time_boot_ms=time_boot_handler(),
         press_abs=0,
@@ -113,14 +120,14 @@ def fetch_scaled_pressure2()->mavlink.MAVLink_scaled_pressure2_message:
 
     )
 
+
 # press_abs	float	hPa	Absolute pressure
 # press_diff	float	hPa	Differential pressure 1
 # temperature	int16_t	cdegC	Absolute pressure temperature
 # temperature_press_diff ++	int16_t	cdegC	Differential pressure te
 
 
-def fetch_scaled_pressure3()->mavlink.MAVLink_scaled_pressure3_message:
-
+def send_scaled_pressure3() -> mavlink.MAVLink_scaled_pressure3_message:
     return mavlink.MAVLink_scaled_pressure3_message(
         time_boot_ms=time_boot_handler(),
         press_abs=0,
@@ -129,14 +136,14 @@ def fetch_scaled_pressure3()->mavlink.MAVLink_scaled_pressure3_message:
         temperature_press_diff=0
     )
 
+
 # press_abs	float	hPa	Absolute pressure
 # press_diff	float	hPa	Differential pressure 1
 # temperature	int16_t	cdegC	Absolute pressure temperature
 # temperature_press_diff ++	int16_t	cdegC	Differential pressure te
 
 
-
-def fetch_ahrs2()->mavlink.MAVLink_ahrs2_message:
+def send_ahrs2() -> mavlink.MAVLink_ahrs2_message:
     return mavlink.MAVLink_ahrs2_message(
         roll=0,
         pitch=0,
@@ -146,6 +153,8 @@ def fetch_ahrs2()->mavlink.MAVLink_ahrs2_message:
         lng=0
 
     )
+
+
 # roll	float	rad	Roll angle.
 # pitch	float	rad	Pitch angle.
 # yaw	float	rad	Yaw angle.
@@ -155,7 +164,7 @@ def fetch_ahrs2()->mavlink.MAVLink_ahrs2_message:
 
 # ----------------------------------------------------------
 
-def fetch_attitude()->mavlink.MAVLink_attitude_message:
+def send_attitude() -> mavlink.MAVLink_attitude_message:
     return mavlink.MAVLink_attitude_message(
         time_boot_ms=time_boot_handler(),
         roll=0,
@@ -166,6 +175,8 @@ def fetch_attitude()->mavlink.MAVLink_attitude_message:
         yawspeed=0
 
     )
+
+
 # roll	float	rad	Roll angle (-pi..+pi)
 # pitch	float	rad	Pitch angle (-pi..+pi)
 # yaw	float	rad	Yaw angle (-pi..+pi)
@@ -173,9 +184,9 @@ def fetch_attitude()->mavlink.MAVLink_attitude_message:
 # pitchspeed	float	rad/s	Pitch angular speed
 # yawspeed	float	rad/s	Yaw angular speed
 
-#---------------------------------------------------------------
+# ---------------------------------------------------------------
 
-def fetch_ekf_status_report()->mavlink.MAVLink_ekf_status_report_message:
+def send_ekf_status_report() -> mavlink.MAVLink_ekf_status_report_message:
     return mavlink.MAVLink_ekf_status_report_message(
         flags=1,
         velocity_variance=0,
@@ -185,8 +196,9 @@ def fetch_ekf_status_report()->mavlink.MAVLink_ekf_status_report_message:
         terrain_alt_variance=0,
         airspeed_variance=0
 
-
     )
+
+
 # flags	uint16_t	EKF_STATUS_FLAGS	Flags.
 # ----------------------------------------------------------
 # 1	EKF_ATTITUDE	Set if EKF's attitude estimate is good.
@@ -210,7 +222,7 @@ def fetch_ekf_status_report()->mavlink.MAVLink_ekf_status_report_message:
 
 # ----------------------------------------------------------------
 
-def fetch_global_position_int()->mavlink.MAVLink_global_position_int_message:
+def send_global_position_int() -> mavlink.MAVLink_global_position_int_message:
     return mavlink.MAVLink_global_position_int_message(
         time_boot_ms=time_boot_handler(),
         lat=0,
@@ -235,8 +247,7 @@ def fetch_global_position_int()->mavlink.MAVLink_global_position_int_message:
 # hdg	uint16_t	cdeg	Vehicle heading (yaw angle), 0.0..359.99 degrees. If unknown, set to: UINT16_MAX
 
 
-
-def fetch_local_position_ned()->mavlink.MAVLink_local_position_ned_message:
+def send_local_position_ned() -> mavlink.MAVLink_local_position_ned_message:
     return mavlink.MAVLink_local_position_ned_message(
         time_boot_ms=time_boot_handler(),
         x=0,
@@ -248,6 +259,7 @@ def fetch_local_position_ned()->mavlink.MAVLink_local_position_ned_message:
 
     )
 
+
 # x	float	m	X Position
 # y	float	m	Y Position
 # z	float	m	Z Position
@@ -256,7 +268,7 @@ def fetch_local_position_ned()->mavlink.MAVLink_local_position_ned_message:
 # vz	float	m/s	Z Speed
 
 
-def fetch_meminfo()->mavlink.MAVLink_meminfo_message:
+def send_meminfo() -> mavlink.MAVLink_meminfo_message:
     return mavlink.MAVLink_meminfo_message(
         brkval=0,
         freemem=0,
@@ -269,8 +281,7 @@ def fetch_meminfo()->mavlink.MAVLink_meminfo_message:
 # freemem32 ++	uint32_t	bytes	Free memory (32 bit).
 
 
-
-def fetch_mission_current()->mavlink.MAVLink_mission_current_message:
+def send_mission_current() -> mavlink.MAVLink_mission_current_message:
     return mavlink.MAVLink_mission_current_message(
         seq=0,
         total=65535,
@@ -278,6 +289,8 @@ def fetch_mission_current()->mavlink.MAVLink_mission_current_message:
         mission_mode=0,
 
     )
+
+
 # seq	uint16_t		Sequence
 # total ++	uint16_t	invalid:UINT16_MAX	Total number of mission items on vehicle (on last item, sequence == total). If the autopilot stores its home location as part of the mission this will be excluded from the total. 0: Not supported, UINT16_MAX if no mission is present on the vehicle.
 # mission_state ++	uint8_t	invalid:0 MISSION_STATE	Mission state machine state. MISSION_STATE_UNKNOWN if state reporting not supported.
@@ -286,20 +299,20 @@ def fetch_mission_current()->mavlink.MAVLink_mission_current_message:
 # fence_id ++	uint32_t	invalid:0	Id of current on-vehicle fence plan, or 0 if IDs are not supported or there is no fence loaded. GCS can use this to track changes to the fence plan type. The same value is returned on fence upload (in the MISSION_ACK).
 # rally_points_id ++	uint32_t	invalid:0	Id of current on-vehicle rally point plan, or 0 if IDs are not supported or there are no rally points loaded. GCS can use this to track changes to the rally point plan type. The same value is returned on rally point upload (in the MISSION_ACK).
 
-def fetch_named_value_float()->mavlink.MAVLink_named_value_float_message:
+def send_named_value_float() -> mavlink.MAVLink_named_value_float_message:
     return mavlink.MAVLink_named_value_float_message(
         time_boot_ms=time_boot_handler(),
         name=b"",
         value=0
     )
 
+
 # name	char[10]		Name of the debug variable
 # Messages with same value are from the same source (instance).
 # value	float		Floating point value
 
 
-
-def fetch_nav_controller_output()->mavlink.MAVLink_nav_controller_output_message:
+def send_nav_controller_output() -> mavlink.MAVLink_nav_controller_output_message:
     return mavlink.MAVLink_nav_controller_output_message(
         nav_roll=0,
         nav_pitch=0,
@@ -310,8 +323,9 @@ def fetch_nav_controller_output()->mavlink.MAVLink_nav_controller_output_message
         aspd_error=0,
         xtrack_error=0
 
-
     )
+
+
 # nav_roll	float	deg	Current desired roll
 # nav_pitch	float	deg	Current desired pitch
 # nav_bearing	int16_t	deg	Current desired heading
@@ -322,13 +336,14 @@ def fetch_nav_controller_output()->mavlink.MAVLink_nav_controller_output_message
 # xtrack_error	float	m	Current crosstrack error on x-y plane
 
 
-def fetch_power_status()->mavlink.MAVLink_power_status_message:
+def send_power_status() -> mavlink.MAVLink_power_status_message:
     return mavlink.MAVLink_power_status_message(
         Vcc=0,
         Vservo=0,
         flags=0
 
     )
+
 
 # Vcc	uint16_t	mV		5V rail voltage.
 # Vservo	uint16_t	mV		Servo rail voltage.
@@ -342,22 +357,18 @@ def fetch_power_status()->mavlink.MAVLink_power_status_message:
 # 32	MAV_POWER_STATUS_CHANGED	Power status has changed since boot
 # -------------------------------------------------------------------------------
 
-def motor_control(rc1,rc2,rc3,rc4,rc5,rc6):
+def motor_control(rc1, rc2, rc3, rc4, rc5, rc6):
     pass
-    #هر کانال حاوی یک اینتیجر است که فرکانس سرعت را تعیین می‌کند
-    #کانال ۱ برای roll است
-    #کانال ۲ برای pitch است
+    # هر کانال حاوی یک اینتیجر است که فرکانس سرعت را تعیین می‌کند
+    # کانال ۱ برای roll است
+    # کانال ۲ برای pitch است
     # کانال ۳ برای throttle است
-    #کانال ۴ برای yaw است
-    #کانال ۵ برای forward است (حرکت رو به جلو و عقب)
-    #کانال ۶ برای lateral است (حرکت چپ و راست)
+    # کانال ۴ برای yaw است
+    # کانال ۵ برای forward است (حرکت رو به جلو و عقب)
+    # کانال ۶ برای lateral است (حرکت چپ و راست)
 
 
-
-
-def fetch_scaled_imu2()->mavlink.MAVLink_scaled_imu2_message:
-
-
+def send_scaled_imu2() -> mavlink.MAVLink_scaled_imu2_message:
     return mavlink.MAVLink_scaled_imu2_message(
         time_boot_ms=time_boot_handler(),
         xacc=65535,
@@ -371,6 +382,8 @@ def fetch_scaled_imu2()->mavlink.MAVLink_scaled_imu2_message:
         zmag=65535,
         temperature=65535
     )
+
+
 # xacc	int16_t	mG	X acceleration
 # yacc	int16_t	mG	Y acceleration
 # zacc	int16_t	mG	Z acceleration
@@ -382,9 +395,7 @@ def fetch_scaled_imu2()->mavlink.MAVLink_scaled_imu2_message:
 # zmag	int16_t	mgauss	Z Magnetic field
 # temperature ++	int16_t	cdegC	Temperature, 0: IMU does not provide temperature values. If the IMU is at 0C it must send 1 (0.01C).
 
-def fetch_scaled_imu3_data()->mavlink.MAVLink_scaled_imu3_message:
-
-
+def send_scaled_imu3() -> mavlink.MAVLink_scaled_imu3_message:
     return mavlink.MAVLink_scaled_imu3_message(
         time_boot_ms=time_boot_handler(),
         xacc=65535,
@@ -400,6 +411,7 @@ def fetch_scaled_imu3_data()->mavlink.MAVLink_scaled_imu3_message:
 
     )
 
+
 # xacc	int16_t	mG	X acceleration
 # yacc	int16_t	mG	Y acceleration
 # zacc	int16_t	mG	Z acceleration
@@ -411,7 +423,7 @@ def fetch_scaled_imu3_data()->mavlink.MAVLink_scaled_imu3_message:
 # zmag	int16_t	mgauss	Z Magnetic field
 # temperature ++	int16_t	cdegC	Temperature, 0: IMU does not provide temperature values. If the IMU is at 0C it must send 1 (0.01C).
 
-def fetch_simstate()->mavlink.MAVLink_simstate_message:
+def send_simstate() -> mavlink.MAVLink_simstate_message:
     return mavlink.MAVLink_simstate_message(
         roll=0,
         pitch=0,
@@ -439,12 +451,12 @@ def fetch_simstate()->mavlink.MAVLink_simstate_message:
 # lat	int32_t	degE7	Latitude.
 # lng	int32_t	degE7	Longitude.
 
-# def fetch_system_time():
+# def send_system_time():
 #     return {
 #         "time_unix_usec":None,
 #     }
 
-def fetch_sys_status()->mavlink.MAVLink_sys_status_message:
+def send_sys_status() -> mavlink.MAVLink_sys_status_message:
     return mavlink.MAVLink_sys_status_message(
         onboard_control_sensors_present=4294967295,
         onboard_control_sensors_enabled=4294967295,
@@ -460,12 +472,10 @@ def fetch_sys_status()->mavlink.MAVLink_sys_status_message:
         errors_count3=65535,
         errors_count4=65535,
 
-
-
     )
 
 
-#onboard_control_sensors_present	uint32_t		MAV_SYS_STATUS_SENSOR	Bitmap showing which onboard controllers and sensors are present. Value of 0: not present. Value of 1: present.
+# onboard_control_sensors_present	uint32_t		MAV_SYS_STATUS_SENSOR	Bitmap showing which onboard controllers and sensors are present. Value of 0: not present. Value of 1: present.
 # onboard_control_sensors_enabled	uint32_t		MAV_SYS_STATUS_SENSOR	Bitmap showing which onboard controllers and sensors are enabled: Value of 0: not enabled. Value of 1: enabled.
 # onboard_control_sensors_health	uint32_t		MAV_SYS_STATUS_SENSOR	Bitmap showing which onboard controllers and sensors have an error (or are operational). Value of 0: error. Value of 1: healthy.
 # load	uint16_t	d%		Maximum usage in percent of the mainloop time. Values: [0-1000] - should always be below 1000
@@ -483,8 +493,7 @@ def fetch_sys_status()->mavlink.MAVLink_sys_status_message:
 # onboard_control_sensors_health_extended ++	uint32_t		MAV_SYS_STATUS_SENSOR_EXTENDED	Bitmap showing which onboard controllers and sensors have an error (or are operational). Value of 0: error. Value of 1: healthy.
 
 
-
-def fetch_terrain_report()->mavlink.MAVLink_terrain_report_message:
+def send_terrain_report() -> mavlink.MAVLink_terrain_report_message:
     return mavlink.MAVLink_terrain_report_message(
         lat=0,
         lon=0,
@@ -496,7 +505,8 @@ def fetch_terrain_report()->mavlink.MAVLink_terrain_report_message:
 
     )
 
-def fetch_vfr_hud()->mavlink.MAVLink_vfr_hud_message:
+
+def send_vfr_hud() -> mavlink.MAVLink_vfr_hud_message:
     return mavlink.MAVLink_vfr_hud_message(
         airspeed=0,
         groundspeed=0,
@@ -506,6 +516,7 @@ def fetch_vfr_hud()->mavlink.MAVLink_vfr_hud_message:
         climb=0
     )
 
+
 # airspeed	float	m/s	Vehicle speed in form appropriate for vehicle type. For standard aircraft this is typically calibrated airspeed (CAS) or indicated airspeed (IAS) - either of which can be used by a pilot to estimate stall speed.
 # groundspeed	float	m/s	Current ground speed.
 # heading	int16_t	deg	Current heading in compass units (0-360, 0=north).
@@ -513,7 +524,7 @@ def fetch_vfr_hud()->mavlink.MAVLink_vfr_hud_message:
 # alt	float	m	Current altitude (MSL).
 # climb	float	m/s	Current climb rate.
 
-def fetch_vibration()->mavlink.MAVLink_vibration_message:
+def send_vibration() -> mavlink.MAVLink_vibration_message:
     return mavlink.MAVLink_vibration_message(
         time_usec=time_usec_handler(),
         vibration_x=0,
@@ -526,10 +537,117 @@ def fetch_vibration()->mavlink.MAVLink_vibration_message:
     )
 
 
-
 # vibration_x	float		Vibration levels on X-axis
 # vibration_y	float		Vibration levels on Y-axis
 # vibration_z	float		Vibration levels on Z-axis
 # clipping_0	uint32_t		first accelerometer clipping count
 # clipping_1	uint32_t		second accelerometer clipping count
 # clipping_2	uint32_t		third accelerometer clipping count
+
+
+def send_fence_status() -> mavlink.MAVLink_fence_status_message:
+    return mavlink.MAVLink_fence_status_message(
+        breach_status=0,
+        breach_count=0,
+        breach_type=0,
+        breach_time=0,
+        breach_mitigation=0
+
+    )
+
+
+# breach_status	uint8_t			Breach status (0 if currently inside fence, 1 if outside).
+# breach_count	uint16_t			Number of fence breaches.
+# breach_type	uint8_t		FENCE_BREACH	Last breach type.
+# ---------------------------------------------------------------
+# 0	FENCE_BREACH_NONE	No last fence breach
+# 1	FENCE_BREACH_MINALT	Breached minimum altitude
+# 2	FENCE_BREACH_MAXALT	Breached maximum altitude
+# 3	FENCE_BREACH_BOUNDARY	Breached fence boundary
+# ----------------------------------------------------------------
+# breach_time	uint32_t	ms		Time (since boot) of last breach.
+# breach_mitigation ++	uint8_t		FENCE_MITIGATE	Active action to prevent fence breach
+# -------------------------------------------------------------
+# 0	FENCE_MITIGATE_UNKNOWN	Unknown
+# 1	FENCE_MITIGATE_NONE	No actions being taken
+# 2	FENCE_MITIGATE_VEL_LIMIT	Velocity limiting active to prevent breach
+# -------------------------------------------------------------
+
+def send_servo_output() -> mavlink.MAVLink_servo_output_raw_message:
+    return mavlink.MAVLink_servo_output_raw_message(
+        time_usec=time_usec_handler(),
+        port=0,
+        servo1_raw=0,
+        servo2_raw=0,
+        servo3_raw=0,
+        servo4_raw=0,
+        servo5_raw=0,
+        servo6_raw=0,
+        servo7_raw=0,
+        servo8_raw=0,
+        servo9_raw=0,
+        servo10_raw=0,
+        servo11_raw=0,
+        servo12_raw=0,
+        servo13_raw=0,
+        servo14_raw=0,
+        servo15_raw=0,
+        servo16_raw=0
+
+    )
+
+# time_usec	uint32_t	us	Timestamp (UNIX Epoch time or time since system boot). The receiving end can infer timestamp format (since 1.1.1970 or since system boot) by checking for the magnitude of the number.
+# port	uint8_t		Servo output port (set of 8 outputs = 1 port). Flight stacks running on Pixhawk should use: 0 = MAIN, 1 = AUX.
+# servo1_raw	uint16_t	us	Servo output 1 value
+# servo2_raw	uint16_t	us	Servo output 2 value
+# servo3_raw	uint16_t	us	Servo output 3 value
+# servo4_raw	uint16_t	us	Servo output 4 value
+# servo5_raw	uint16_t	us	Servo output 5 value
+# servo6_raw	uint16_t	us	Servo output 6 value
+# servo7_raw	uint16_t	us	Servo output 7 value
+# servo8_raw	uint16_t	us	Servo output 8 value
+# servo9_raw ++	uint16_t	us	Servo output 9 value
+# servo10_raw ++	uint16_t	us	Servo output 10 value
+# servo11_raw ++	uint16_t	us	Servo output 11 value
+# servo12_raw ++	uint16_t	us	Servo output 12 value
+# servo13_raw ++	uint16_t	us	Servo output 13 value
+# servo14_raw ++	uint16_t	us	Servo output 14 value
+# servo15_raw ++	uint16_t	us	Servo output 15 value
+# servo16_raw ++	uint16_t	us	Servo output 16 value
+
+
+def send_rc_channels()->mavlink.MAVLink_rc_channels_message:
+    return mavlink.MAVLink_rc_channels_message(
+        time_boot_ms=time_boot_handler(),
+        chancount=0,
+        chan1_raw=0,
+
+
+
+    )
+
+
+# time_boot_ms	uint32_t	ms	Timestamp (time since system boot).
+# chancount	uint8_t		Total number of RC channels being received. This can be larger than 18, indicating that more channels are available but not given in this message. This value should be 0 when no RC channels are available.
+# chan1_raw	uint16_t	us	RC channel 1 value.
+# chan2_raw	uint16_t	us	RC channel 2 value.
+# chan3_raw	uint16_t	us	RC channel 3 value.
+# chan4_raw	uint16_t	us	RC channel 4 value.
+# chan5_raw	uint16_t	us	RC channel 5 value.
+# chan6_raw	uint16_t	us	RC channel 6 value.
+# chan7_raw	uint16_t	us	RC channel 7 value.
+# chan8_raw	uint16_t	us	RC channel 8 value.
+# chan9_raw	uint16_t	us	RC channel 9 value.
+# chan10_raw	uint16_t	us	RC channel 10 value.
+# chan11_raw	uint16_t	us	RC channel 11 value.
+# chan12_raw	uint16_t	us	RC channel 12 value.
+# chan13_raw	uint16_t	us	RC channel 13 value.
+# chan14_raw	uint16_t	us	RC channel 14 value.
+# chan15_raw	uint16_t	us	RC channel 15 value.
+# chan16_raw	uint16_t	us	RC channel 16 value.
+# chan17_raw	uint16_t	us	RC channel 17 value.
+# chan18_raw	uint16_t	us	RC channel 18 value.
+# rssi	uint8_t		Receive signal strength indicator in device-dependent units/scale. Values: [0-254], UINT8_MAX: invalid/unknown.
+
+
+
