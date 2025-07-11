@@ -596,6 +596,7 @@ def send_servo_output_raw() -> mavlink.MAVLink_servo_output_raw_message:
 
     )
 
+
 # time_usec	uint32_t	us	Timestamp (UNIX Epoch time or time since system boot). The receiving end can infer timestamp format (since 1.1.1970 or since system boot) by checking for the magnitude of the number.
 # port	uint8_t		Servo output port (set of 8 outputs = 1 port). Flight stacks running on Pixhawk should use: 0 = MAIN, 1 = AUX.
 # servo1_raw	uint16_t	us	Servo output 1 value
@@ -616,7 +617,7 @@ def send_servo_output_raw() -> mavlink.MAVLink_servo_output_raw_message:
 # servo16_raw ++	uint16_t	us	Servo output 16 value
 
 
-def send_rc_channels()->mavlink.MAVLink_rc_channels_message:
+def send_rc_channels() -> mavlink.MAVLink_rc_channels_message:
     return mavlink.MAVLink_rc_channels_message(
         time_boot_ms=time_boot_handler(),
         chancount=0,
@@ -639,8 +640,6 @@ def send_rc_channels()->mavlink.MAVLink_rc_channels_message:
         chan17_raw=0,
         chan18_raw=0,
         rssi=0,
-
-
 
     )
 
@@ -668,4 +667,467 @@ def send_rc_channels()->mavlink.MAVLink_rc_channels_message:
 # rssi	uint8_t		Receive signal strength indicator in device-dependent units/scale. Values: [0-254], UINT8_MAX: invalid/unknown.
 
 
+def send_rc_channels_raw() -> mavlink.MAVLink_rc_channels_raw_message:
+    return mavlink.MAVLink_rc_channels_raw_message(
+        time_boot_ms=time_boot_handler(),
+        port=0,
+        chan1_raw=0,
+        chan2_raw=0,
+        chan3_raw=0,
+        chan4_raw=0,
+        chan5_raw=0,
+        chan6_raw=0,
+        chan7_raw=0,
+        chan8_raw=0,
+        rssi=0
 
+    )
+
+
+# time_boot_ms	uint32_t	ms	Timestamp (time since system boot).
+# port	uint8_t		Servo output port (set of 8 outputs = 1 port). Flight stacks running on Pixhawk should use: 0 = MAIN, 1 = AUX.
+# chan1_raw	uint16_t	us	RC channel 1 value.
+# chan2_raw	uint16_t	us	RC channel 2 value.
+# chan3_raw	uint16_t	us	RC channel 3 value.
+# chan4_raw	uint16_t	us	RC channel 4 value.
+# chan5_raw	uint16_t	us	RC channel 5 value.
+# chan6_raw	uint16_t	us	RC channel 6 value.
+# chan7_raw	uint16_t	us	RC channel 7 value.
+# chan8_raw	uint16_t	us	RC channel 8 value.
+# rssi	uint8_t		Receive signal strength indicator in device-dependent units/scale. Values: [0-254], UINT8_MAX: invalid/unknown.
+
+def send_pid_tuning() -> mavlink.MAVLink_pid_tuning_message:
+    return mavlink.MAVLink_pid_tuning_message(
+        axis=0,
+        desired=0,
+        achieved=0,
+        FF=0,
+        P=0,
+        I=0,
+        D=0,
+        SRate=0,
+        PDmod=0
+
+    )
+
+
+# axis	uint8_t	PID_TUNING_AXIS	Axis.
+# Messages with same value are from the same source (instance).
+# desired	float		Desired rate.
+# achieved	float		Achieved rate.
+# FF	float		FF component.
+# P	float		P component.
+# I	float		I component.
+# D	float		D component.
+# SRate ++	float		Slew rate.
+# PDmod ++	float		P/D oscillation modifier.
+
+
+def send_ahrs() -> mavlink.MAVLink_ahrs_message:
+    return mavlink.MAVLink_ahrs_message(
+        omegaIx=0,
+        omegaIy=0,
+        omegaIz=0,
+        accel_weight=0,
+        renorm_val=0,
+        error_rp=0,
+        error_yaw=0
+
+    )
+
+
+# omegaIx	float	rad/s	X gyro drift estimate.
+# omegaIy	float	rad/s	Y gyro drift estimate.
+# omegaIz	float	rad/s	Z gyro drift estimate.
+# accel_weight	float		Average accel_weight.
+# renorm_val	float		Average renormalisation value.
+# error_rp	float		Average error_roll_pitch value.
+# error_yaw	float		Average error_yaw value.
+
+def send_system_time() -> mavlink.MAVLink_system_time_message:
+    return mavlink.MAVLink_system_time_message(
+        time_boot_ms=time_boot_handler(),
+        time_unix_usec=time_usec_handler()
+
+    )
+
+
+# time_unix_usec	uint64_t	us	Timestamp (UNIX epoch time).
+# time_boot_ms	uint32_t	ms	Timestamp (time since system boot).
+
+
+def send_rangefinder() -> mavlink.MAVLink_rangefinder_message:
+    return mavlink.MAVLink_rangefinder_message(
+        distance=0,
+        voltage=0
+    )
+
+
+# distance	float	m	Distance.
+# voltage	float	V	Raw voltage if available, zero otherwise.
+
+def send_distance_sensor() -> mavlink.MAVLink_distance_sensor_message:
+    return mavlink.MAVLink_distance_sensor_message(
+        time_boot_ms=time_boot_handler(),
+        min_distance=0,
+        max_distance=0,
+        current_distance=0,
+        type=0,
+        id=0,
+        orientation=0,
+        covariance=0,
+        horizontal_fov=0,
+        vertical_fov=0,
+        quaternion=[],
+        signal_quality=0,
+
+    )
+
+
+# time_boot_ms	uint32_t	ms		Timestamp (time since system boot).
+# min_distance	uint16_t	cm		Minimum distance the sensor can measure
+# max_distance	uint16_t	cm		Maximum distance the sensor can measure
+# current_distance	uint16_t	cm		Current distance reading
+# type	uint8_t		MAV_DISTANCE_SENSOR	Type of distance sensor.
+# -----------------------------------------------------------------------------
+# 0	MAV_DISTANCE_SENSOR_LASER	Laser rangefinder, e.g. LightWare SF02/F or PulsedLight units
+# 1	MAV_DISTANCE_SENSOR_ULTRASOUND	Ultrasound rangefinder, e.g. MaxBotix units
+# 2	MAV_DISTANCE_SENSOR_INFRARED	Infrared rangefinder, e.g. Sharp units
+# 3	MAV_DISTANCE_SENSOR_RADAR	Radar type, e.g. uLanding units
+# 4	MAV_DISTANCE_SENSOR_UNKNOWN	Broken or unknown type, e.g. analog units
+# -----------------------------------------------------------------------------
+# id	uint8_t			Onboard ID of the sensor Messages with same value are from the same source (instance).
+# orientation	uint8_t		MAV_SENSOR_ORIENTATION	Direction the sensor faces. downward-facing: ROTATION_PITCH_270, upward-facing: ROTATION_PITCH_90, backward-facing: ROTATION_PITCH_180, forward-facing: ROTATION_NONE, left-facing: ROTATION_YAW_90, right-facing: ROTATION_YAW_270
+# -------------------------------------------------------------------------------------------
+# 0	MAV_SENSOR_ROTATION_NONE	Roll: 0, Pitch: 0, Yaw: 0
+# 1	MAV_SENSOR_ROTATION_YAW_45	Roll: 0, Pitch: 0, Yaw: 45
+# 2	MAV_SENSOR_ROTATION_YAW_90	Roll: 0, Pitch: 0, Yaw: 90
+# 3	MAV_SENSOR_ROTATION_YAW_135	Roll: 0, Pitch: 0, Yaw: 135
+# 4	MAV_SENSOR_ROTATION_YAW_180	Roll: 0, Pitch: 0, Yaw: 180
+# 5	MAV_SENSOR_ROTATION_YAW_225	Roll: 0, Pitch: 0, Yaw: 225
+# 6	MAV_SENSOR_ROTATION_YAW_270	Roll: 0, Pitch: 0, Yaw: 270
+# 7	MAV_SENSOR_ROTATION_YAW_315	Roll: 0, Pitch: 0, Yaw: 315
+# 8	MAV_SENSOR_ROTATION_ROLL_180	Roll: 180, Pitch: 0, Yaw: 0
+# 9	MAV_SENSOR_ROTATION_ROLL_180_YAW_45	Roll: 180, Pitch: 0, Yaw: 45
+# 10	MAV_SENSOR_ROTATION_ROLL_180_YAW_90	Roll: 180, Pitch: 0, Yaw: 90
+# 11	MAV_SENSOR_ROTATION_ROLL_180_YAW_135	Roll: 180, Pitch: 0, Yaw: 135
+# 12	MAV_SENSOR_ROTATION_PITCH_180	Roll: 0, Pitch: 180, Yaw: 0
+# 13	MAV_SENSOR_ROTATION_ROLL_180_YAW_225	Roll: 180, Pitch: 0, Yaw: 225
+# 14	MAV_SENSOR_ROTATION_ROLL_180_YAW_270	Roll: 180, Pitch: 0, Yaw: 270
+# 15	MAV_SENSOR_ROTATION_ROLL_180_YAW_315	Roll: 180, Pitch: 0, Yaw: 315
+# 16	MAV_SENSOR_ROTATION_ROLL_90	Roll: 90, Pitch: 0, Yaw: 0
+# 17	MAV_SENSOR_ROTATION_ROLL_90_YAW_45	Roll: 90, Pitch: 0, Yaw: 45
+# 18	MAV_SENSOR_ROTATION_ROLL_90_YAW_90	Roll: 90, Pitch: 0, Yaw: 90
+# 19	MAV_SENSOR_ROTATION_ROLL_90_YAW_135	Roll: 90, Pitch: 0, Yaw: 135
+# 20	MAV_SENSOR_ROTATION_ROLL_270	Roll: 270, Pitch: 0, Yaw: 0
+# 21	MAV_SENSOR_ROTATION_ROLL_270_YAW_45	Roll: 270, Pitch: 0, Yaw: 45
+# 22	MAV_SENSOR_ROTATION_ROLL_270_YAW_90	Roll: 270, Pitch: 0, Yaw: 90
+# 23	MAV_SENSOR_ROTATION_ROLL_270_YAW_135	Roll: 270, Pitch: 0, Yaw: 135
+# 24	MAV_SENSOR_ROTATION_PITCH_90	Roll: 0, Pitch: 90, Yaw: 0
+# 25	MAV_SENSOR_ROTATION_PITCH_270	Roll: 0, Pitch: 270, Yaw: 0
+# 26	MAV_SENSOR_ROTATION_PITCH_180_YAW_90	Roll: 0, Pitch: 180, Yaw: 90
+# 27	MAV_SENSOR_ROTATION_PITCH_180_YAW_270	Roll: 0, Pitch: 180, Yaw: 270
+# 28	MAV_SENSOR_ROTATION_ROLL_90_PITCH_90	Roll: 90, Pitch: 90, Yaw: 0
+# 29	MAV_SENSOR_ROTATION_ROLL_180_PITCH_90	Roll: 180, Pitch: 90, Yaw: 0
+# 30	MAV_SENSOR_ROTATION_ROLL_270_PITCH_90	Roll: 270, Pitch: 90, Yaw: 0
+# 31	MAV_SENSOR_ROTATION_ROLL_90_PITCH_180	Roll: 90, Pitch: 180, Yaw: 0
+# 32	MAV_SENSOR_ROTATION_ROLL_270_PITCH_180	Roll: 270, Pitch: 180, Yaw: 0
+# 33	MAV_SENSOR_ROTATION_ROLL_90_PITCH_270	Roll: 90, Pitch: 270, Yaw: 0
+# 34	MAV_SENSOR_ROTATION_ROLL_180_PITCH_270	Roll: 180, Pitch: 270, Yaw: 0
+# 35	MAV_SENSOR_ROTATION_ROLL_270_PITCH_270	Roll: 270, Pitch: 270, Yaw: 0
+# 36	MAV_SENSOR_ROTATION_ROLL_90_PITCH_180_YAW_90	Roll: 90, Pitch: 180, Yaw: 90
+# 37	MAV_SENSOR_ROTATION_ROLL_90_YAW_270	Roll: 90, Pitch: 0, Yaw: 270
+# 38	MAV_SENSOR_ROTATION_ROLL_90_PITCH_68_YAW_293	Roll: 90, Pitch: 68, Yaw: 293
+# 39	MAV_SENSOR_ROTATION_PITCH_315	Pitch: 315
+# 40	MAV_SENSOR_ROTATION_ROLL_90_PITCH_315	Roll: 90, Pitch: 315
+# 100	MAV_SENSOR_ROTATION_CUSTOM	Custom orientation
+# -------------------------------------------------------------------------------------------
+# covariance	uint8_t	cm^2	invalid:UINT8_MAX	Measurement variance. Max standard deviation is 6cm. UINT8_MAX if unknown.
+# horizontal_fov ++	float	rad	invalid:0	Horizontal Field of View (angle) where the distance measurement is valid and the field of view is known. Otherwise this is set to 0.
+# vertical_fov ++	float	rad	invalid:0	Vertical Field of View (angle) where the distance measurement is valid and the field of view is known. Otherwise this is set to 0.
+# quaternion ++	float[4]		invalid:[0]	Quaternion of the sensor orientation in vehicle body frame (w, x, y, z order, zero-rotation is 1, 0, 0, 0). Zero-rotation is along the vehicle body x-axis. This field is required if the orientation is set to MAV_SENSOR_ROTATION_CUSTOM. Set it to 0 if invalid."
+# signal_quality ++	uint8_t	%	invalid:0	Signal quality of the sensor. Specific to each sensor type, representing the relation of the signal strength with the target reflectivity, distance, size or aspect, but normalised as a percentage. 0 = unknown/unset signal quality, 1 = invalid signal, 100 = perfect signal.
+
+def send_battery_status() -> mavlink.MAVLink_battery_status_message:
+    return mavlink.MAVLink_battery_status_message(
+        id=0,
+        battery_function=0,
+        type=0,
+        temperature=65535,
+        voltages=[],
+        current_battery=-1,
+        current_consumed=-1,
+        energy_consumed=-1,
+        battery_remaining=-1,
+        time_remaining=0,
+        charge_state=0,
+        voltages_ext=[],
+        mode=0,
+        fault_bitmask=0,
+
+
+
+
+    )
+
+# id	uint8_t			Battery ID Messages with same value are from the same source (instance).
+# battery_function	uint8_t		MAV_BATTERY_FUNCTION	Function of the battery
+# ------------------------------------------------------------------------
+# 0	MAV_BATTERY_FUNCTION_UNKNOWN	Battery function is unknown
+# 1	MAV_BATTERY_FUNCTION_ALL	Battery supports all flight systems
+# 2	MAV_BATTERY_FUNCTION_PROPULSION	Battery for the propulsion system
+# 3	MAV_BATTERY_FUNCTION_AVIONICS	Avionics battery
+# 4	MAV_BATTERY_FUNCTION_PAYLOAD	Payload battery
+# ------------------------------------------------------------------------
+# type	uint8_t		MAV_BATTERY_TYPE	Type (chemistry) of the battery
+# ---------------------------------------------------------------------------
+# 0	MAV_BATTERY_TYPE_UNKNOWN	Not specified.
+# 1	MAV_BATTERY_TYPE_LIPO	Lithium polymer battery
+# 2	MAV_BATTERY_TYPE_LIFE	Lithium-iron-phosphate battery
+# 3	MAV_BATTERY_TYPE_LION	Lithium-ION battery
+# 4	MAV_BATTERY_TYPE_NIMH	Nickel metal hydride battery
+# ---------------------------------------------------------------------------
+# temperature	int16_t	cdegC	invalid:INT16_MAX	Temperature of the battery. INT16_MAX for unknown temperature.
+# voltages	uint16_t[10]	mV	invalid:[UINT16_MAX]	Battery voltage of cells 1 to 10 (see voltages_ext for cells 11-14). Cells in this field above the valid cell count for this battery should have the UINT16_MAX value. If individual cell voltages are unknown or not measured for this battery, then the overall battery voltage should be filled in cell 0, with all others set to UINT16_MAX. If the voltage of the battery is greater than (UINT16_MAX - 1), then cell 0 should be set to (UINT16_MAX - 1), and cell 1 to the remaining voltage. This can be extended to multiple cells if the total voltage is greater than 2 * (UINT16_MAX - 1).
+# current_battery	int16_t	cA	invalid:-1	Battery current, -1: autopilot does not measure the current
+# current_consumed	int32_t	mAh	invalid:-1	Consumed charge, -1: autopilot does not provide consumption estimate
+# energy_consumed	int32_t	hJ	invalid:-1	Consumed energy, -1: autopilot does not provide energy consumption estimate
+# battery_remaining	int8_t	%	invalid:-1	Remaining battery energy. Values: [0-100], -1: autopilot does not estimate the remaining battery.
+# time_remaining ++	int32_t	s	invalid:0	Remaining battery time, 0: autopilot does not provide remaining battery time estimate
+# charge_state ++	uint8_t		MAV_BATTERY_CHARGE_STATE	State for extent of discharge, provided by autopilot for warning or external reactions
+# -----------------------------------------------------------------------
+# 0	MAV_BATTERY_CHARGE_STATE_UNDEFINED	Low battery state is not provided
+# 1	MAV_BATTERY_CHARGE_STATE_OK	Battery is not in low state. Normal operation.
+# 2	MAV_BATTERY_CHARGE_STATE_LOW	Battery state is low, warn and monitor close.
+# 3	MAV_BATTERY_CHARGE_STATE_CRITICAL	Battery state is critical, return or abort immediately.
+# 4	MAV_BATTERY_CHARGE_STATE_EMERGENCY	Battery state is too low for ordinary abort sequence. Perform fastest possible emergency stop to prevent damage.
+# 5	MAV_BATTERY_CHARGE_STATE_FAILED	Battery failed, damage unavoidable. Possible causes (faults) are listed in MAV_BATTERY_FAULT.
+# 6	MAV_BATTERY_CHARGE_STATE_UNHEALTHY	Battery is diagnosed to be defective or an error occurred, usage is discouraged / prohibited. Possible causes (faults) are listed in MAV_BATTERY_FAULT.
+# 7	MAV_BATTERY_CHARGE_STATE_CHARGING	Battery is charging.
+# -----------------------------------------------------------------------
+# voltages_ext ++	uint16_t[4]	mV	invalid:[0]	Battery voltages for cells 11 to 14. Cells above the valid cell count for this battery should have a value of 0, where zero indicates not supported (note, this is different than for the voltages field and allows empty byte truncation). If the measured value is 0 then 1 should be sent instead.
+# mode ++	uint8_t		MAV_BATTERY_MODE	Battery mode. Default (0) is that battery mode reporting is not supported or battery is in normal-use mode.
+# ---------------------------------------------------------------------------
+# 0	MAV_BATTERY_MODE_UNKNOWN	Battery mode not supported/unknown battery mode/normal operation.
+# 1	MAV_BATTERY_MODE_AUTO_DISCHARGING	Battery is auto discharging (towards storage level).
+# 2	MAV_BATTERY_MODE_HOT_SWAP	Battery in hot-swap mode (current limited to prevent spikes that might damage sensitive electrical circuits).
+# ---------------------------------------------------------------------------
+# fault_bitmask ++	uint32_t		MAV_BATTERY_FAULT	Fault/health indications. These should be set when charge_state is MAV_BATTERY_CHARGE_STATE_FAILED or MAV_BATTERY_CHARGE_STATE_UNHEALTHY (if not, fault reporting is not supported).
+# ------------------------------------------------------------------------------
+# 1	MAV_BATTERY_FAULT_DEEP_DISCHARGE	Battery has deep discharged.
+# 2	MAV_BATTERY_FAULT_SPIKES	Voltage spikes.
+# 4	MAV_BATTERY_FAULT_CELL_FAIL	One or more cells have failed. Battery should also report MAV_BATTERY_CHARGE_STATE_FAILE (and should not be used).
+# 8	MAV_BATTERY_FAULT_OVER_CURRENT	Over-current fault.
+# 16	MAV_BATTERY_FAULT_OVER_TEMPERATURE	Over-temperature fault.
+# 32	MAV_BATTERY_FAULT_UNDER_TEMPERATURE	Under-temperature fault.
+# 64	MAV_BATTERY_FAULT_INCOMPATIBLE_VOLTAGE	Vehicle voltage is not compatible with this battery (batteries on same power rail should have similar voltage).
+# 128	MAV_BATTERY_FAULT_INCOMPATIBLE_FIRMWARE	Battery firmware is not compatible with current autopilot firmware.
+# 256	BATTERY_FAULT_INCOMPATIBLE_CELLS_CONFIGURATION	Battery is not compatible due to cell configuration (e.g. 5s1p when vehicle requires 6s).
+# ------------------------------------------------------------------------------
+
+
+
+def send_gimbal_device_attitude_status()->mavlink.MAVLink_gimbal_device_attitude_status_message:
+    return mavlink.MAVLink_gimbal_device_attitude_status_message(
+        target_system=0,
+        target_component=0,
+        time_boot_ms=time_boot_handler(),
+        flags=0,
+        q=[],
+        angular_velocity_x=0,
+        angular_velocity_y=0,
+        angular_velocity_z=0,
+        failure_flags=0,
+        delta_yaw=0,
+        delta_yaw_velocity=0,
+        gimbal_device_id=0
+
+
+    )
+# target_system	uint8_t			System ID
+# target_component	uint8_t			Component ID
+# time_boot_ms	uint32_t	ms		Timestamp (time since system boot).
+# flags	uint16_t		GIMBAL_DEVICE_FLAGS	Current gimbal flags set.
+# -----------------------------------------------------------------------
+# GIMBAL_DEVICE_FLAGS
+# (Bitmask) Flags for gimbal device (lower level) operation.
+# Value	Name	Description
+# 1	GIMBAL_DEVICE_FLAGS_RETRACT	Set to retracted safe position (no stabilization), takes precedence over all other flags.
+# 2	GIMBAL_DEVICE_FLAGS_NEUTRAL	Set to neutral/default position, taking precedence over all other flags except RETRACT. Neutral is commonly forward-facing and horizontal (roll=pitch=yaw=0) but may be any orientation.
+# 4	GIMBAL_DEVICE_FLAGS_ROLL_LOCK	Lock roll angle to absolute angle relative to horizon (not relative to vehicle). This is generally the default with a stabilizing gimbal.
+# 8	GIMBAL_DEVICE_FLAGS_PITCH_LOCK	Lock pitch angle to absolute angle relative to horizon (not relative to vehicle). This is generally the default with a stabilizing gimbal.
+# 16	GIMBAL_DEVICE_FLAGS_YAW_LOCK	Lock yaw angle to absolute angle relative to North (not relative to vehicle). If this flag is set, the yaw angle and z component of angular velocity are relative to North (earth frame, x-axis pointing North), else they are relative to the vehicle heading (vehicle frame, earth frame rotated so that the x-axis is pointing forward).
+# 32	GIMBAL_DEVICE_FLAGS_YAW_IN_VEHICLE_FRAME	Yaw angle and z component of angular velocity are relative to the vehicle heading (vehicle frame, earth frame rotated such that the x-axis is pointing forward).
+# 64	GIMBAL_DEVICE_FLAGS_YAW_IN_EARTH_FRAME	Yaw angle and z component of angular velocity are relative to North (earth frame, x-axis is pointing North).
+# 128	GIMBAL_DEVICE_FLAGS_ACCEPTS_YAW_IN_EARTH_FRAME	Gimbal device can accept yaw angle inputs relative to North (earth frame). This flag is only for reporting (attempts to set this flag are ignored).
+# 256	GIMBAL_DEVICE_FLAGS_RC_EXCLUSIVE	The gimbal orientation is set exclusively by the RC signals feed to the gimbal's radio control inputs. MAVLink messages for setting the gimbal orientation (GIMBAL_DEVICE_SET_ATTITUDE) are ignored.
+# 512	GIMBAL_DEVICE_FLAGS_RC_MIXED	The gimbal orientation is determined by combining/mixing the RC signals feed to the gimbal's radio control inputs and the MAVLink messages for setting the gimbal orientation (GIMBAL_DEVICE_SET_ATTITUDE). How these two controls are combined or mixed is not defined by the protocol but is up to the implementation.
+# -----------------------------------------------------------------------
+# q	float[4]			Quaternion components, w, x, y, z (1 0 0 0 is the null-rotation). The frame is described in the message description.
+# angular_velocity_x	float	rad/s	invalid:NaN	X component of angular velocity (positive: rolling to the right). The frame is described in the message description. NaN if unknown.
+# angular_velocity_y	float	rad/s	invalid:NaN	Y component of angular velocity (positive: pitching up). The frame is described in the message description. NaN if unknown.
+# angular_velocity_z	float	rad/s	invalid:NaN	Z component of angular velocity (positive: yawing to the right). The frame is described in the message description. NaN if unknown.
+# failure_flags	uint32_t		GIMBAL_DEVICE_ERROR_FLAGS	Failure flags (0 for no failure)
+# --------------------------------------------------------------------------------------------------
+# 1	GIMBAL_DEVICE_ERROR_FLAGS_AT_ROLL_LIMIT	Gimbal device is limited by hardware roll limit.
+# 2	GIMBAL_DEVICE_ERROR_FLAGS_AT_PITCH_LIMIT	Gimbal device is limited by hardware pitch limit.
+# 4	GIMBAL_DEVICE_ERROR_FLAGS_AT_YAW_LIMIT	Gimbal device is limited by hardware yaw limit.
+# 8	GIMBAL_DEVICE_ERROR_FLAGS_ENCODER_ERROR	There is an error with the gimbal encoders.
+# 16	GIMBAL_DEVICE_ERROR_FLAGS_POWER_ERROR	There is an error with the gimbal power source.
+# 32	GIMBAL_DEVICE_ERROR_FLAGS_MOTOR_ERROR	There is an error with the gimbal motors.
+# 64	GIMBAL_DEVICE_ERROR_FLAGS_SOFTWARE_ERROR	There is an error with the gimbal's software.
+# 128	GIMBAL_DEVICE_ERROR_FLAGS_COMMS_ERROR	There is an error with the gimbal's communication.
+# 256	GIMBAL_DEVICE_ERROR_FLAGS_CALIBRATION_RUNNING	Gimbal device is currently calibrating.
+# 512	GIMBAL_DEVICE_ERROR_FLAGS_NO_MANAGER	Gimbal device is not assigned to a gimbal manager.
+# ----------------------------------------------------------------------------------------------------
+# delta_yaw ++	float	rad	invalid:NAN	Yaw angle relating the quaternions in earth and body frames (see message description). NaN if unknown.
+# delta_yaw_velocity ++	float	rad/s	invalid:NAN	Yaw angular velocity relating the angular velocities in earth and body frames (see message description). NaN if unknown.
+# gimbal_device_id ++	uint8_t		invalid:0	This field is to be used if the gimbal manager and the gimbal device are the same component and hence have the same component ID. This field is then set a number between 1-6. If the component ID is separate, this field is not required and must be set to 0.
+
+def send_mag_cal_report()->mavlink.MAVLink_mag_cal_report_message:
+    return mavlink.MAVLink_mag_cal_report_message(
+        compass_id=0,
+        cal_mask=0,
+        cal_status=0,
+        autosaved=0,
+        fitness=0,
+        ofs_x=0,
+        ofs_y=0,
+        ofs_z=0,
+        offdiag_x=0,
+        offdiag_y=0,
+        offdiag_z=0,
+        orientation_confidence=0,
+        old_orientation=0,
+        new_orientation=0,
+        scale_factor=0,
+
+
+    )
+# compass_id	uint8_t			Compass being calibrated.
+# Messages with same value are from the same source (instance).
+# cal_mask	uint8_t			Bitmask of compasses being calibrated.
+# cal_status	uint8_t		MAG_CAL_STATUS	Calibration Status.
+# -----------------------------------------------------------------------------------
+# 0	MAG_CAL_NOT_STARTED
+# 1	MAG_CAL_WAITING_TO_START
+# 2	MAG_CAL_RUNNING_STEP_ONE
+# 3	MAG_CAL_RUNNING_STEP_TWO
+# 4	MAG_CAL_SUCCESS
+# 5	MAG_CAL_FAILED
+# 6	MAG_CAL_BAD_ORIENTATION
+# 7	MAG_CAL_BAD_RADIUS
+# -----------------------------------------------------------------------------------
+# autosaved	uint8_t			0=requires a MAV_CMD_DO_ACCEPT_MAG_CAL, 1=saved to parameters.
+# fitness	float	mgauss		RMS milligauss residuals.
+# ofs_x	float			X offset.
+# ofs_y	float			Y offset.
+# ofs_z	float			Z offset.
+# diag_x	float			X diagonal (matrix 11).
+# diag_y	float			Y diagonal (matrix 22).
+# diag_z	float			Z diagonal (matrix 33).
+# offdiag_x	float			X off-diagonal (matrix 12 and 21).
+# offdiag_y	float			Y off-diagonal (matrix 13 and 31).
+# offdiag_z	float			Z off-diagonal (matrix 32 and 23).
+# orientation_confidence ++	float			Confidence in orientation (higher is better).
+# old_orientation ++	uint8_t		MAV_SENSOR_ORIENTATION	orientation before calibration.
+# ---------------------------------------------------------------------------
+# 0	MAV_SENSOR_ROTATION_NONE	Roll: 0, Pitch: 0, Yaw: 0
+# 1	MAV_SENSOR_ROTATION_YAW_45	Roll: 0, Pitch: 0, Yaw: 45
+# 2	MAV_SENSOR_ROTATION_YAW_90	Roll: 0, Pitch: 0, Yaw: 90
+# 3	MAV_SENSOR_ROTATION_YAW_135	Roll: 0, Pitch: 0, Yaw: 135
+# 4	MAV_SENSOR_ROTATION_YAW_180	Roll: 0, Pitch: 0, Yaw: 180
+# 5	MAV_SENSOR_ROTATION_YAW_225	Roll: 0, Pitch: 0, Yaw: 225
+# 6	MAV_SENSOR_ROTATION_YAW_270	Roll: 0, Pitch: 0, Yaw: 270
+# 7	MAV_SENSOR_ROTATION_YAW_315	Roll: 0, Pitch: 0, Yaw: 315
+# 8	MAV_SENSOR_ROTATION_ROLL_180	Roll: 180, Pitch: 0, Yaw: 0
+# 9	MAV_SENSOR_ROTATION_ROLL_180_YAW_45	Roll: 180, Pitch: 0, Yaw: 45
+# 10	MAV_SENSOR_ROTATION_ROLL_180_YAW_90	Roll: 180, Pitch: 0, Yaw: 90
+# 11	MAV_SENSOR_ROTATION_ROLL_180_YAW_135	Roll: 180, Pitch: 0, Yaw: 135
+# 12	MAV_SENSOR_ROTATION_PITCH_180	Roll: 0, Pitch: 180, Yaw: 0
+# 13	MAV_SENSOR_ROTATION_ROLL_180_YAW_225	Roll: 180, Pitch: 0, Yaw: 225
+# 14	MAV_SENSOR_ROTATION_ROLL_180_YAW_270	Roll: 180, Pitch: 0, Yaw: 270
+# 15	MAV_SENSOR_ROTATION_ROLL_180_YAW_315	Roll: 180, Pitch: 0, Yaw: 315
+# 16	MAV_SENSOR_ROTATION_ROLL_90	Roll: 90, Pitch: 0, Yaw: 0
+# 17	MAV_SENSOR_ROTATION_ROLL_90_YAW_45	Roll: 90, Pitch: 0, Yaw: 45
+# 18	MAV_SENSOR_ROTATION_ROLL_90_YAW_90	Roll: 90, Pitch: 0, Yaw: 90
+# 19	MAV_SENSOR_ROTATION_ROLL_90_YAW_135	Roll: 90, Pitch: 0, Yaw: 135
+# 20	MAV_SENSOR_ROTATION_ROLL_270	Roll: 270, Pitch: 0, Yaw: 0
+# 21	MAV_SENSOR_ROTATION_ROLL_270_YAW_45	Roll: 270, Pitch: 0, Yaw: 45
+# 22	MAV_SENSOR_ROTATION_ROLL_270_YAW_90	Roll: 270, Pitch: 0, Yaw: 90
+# 23	MAV_SENSOR_ROTATION_ROLL_270_YAW_135	Roll: 270, Pitch: 0, Yaw: 135
+# 24	MAV_SENSOR_ROTATION_PITCH_90	Roll: 0, Pitch: 90, Yaw: 0
+# 25	MAV_SENSOR_ROTATION_PITCH_270	Roll: 0, Pitch: 270, Yaw: 0
+# 26	MAV_SENSOR_ROTATION_PITCH_180_YAW_90	Roll: 0, Pitch: 180, Yaw: 90
+# 27	MAV_SENSOR_ROTATION_PITCH_180_YAW_270	Roll: 0, Pitch: 180, Yaw: 270
+# 28	MAV_SENSOR_ROTATION_ROLL_90_PITCH_90	Roll: 90, Pitch: 90, Yaw: 0
+# 29	MAV_SENSOR_ROTATION_ROLL_180_PITCH_90	Roll: 180, Pitch: 90, Yaw: 0
+# 30	MAV_SENSOR_ROTATION_ROLL_270_PITCH_90	Roll: 270, Pitch: 90, Yaw: 0
+# 31	MAV_SENSOR_ROTATION_ROLL_90_PITCH_180	Roll: 90, Pitch: 180, Yaw: 0
+# 32	MAV_SENSOR_ROTATION_ROLL_270_PITCH_180	Roll: 270, Pitch: 180, Yaw: 0
+# 33	MAV_SENSOR_ROTATION_ROLL_90_PITCH_270	Roll: 90, Pitch: 270, Yaw: 0
+# 34	MAV_SENSOR_ROTATION_ROLL_180_PITCH_270	Roll: 180, Pitch: 270, Yaw: 0
+# 35	MAV_SENSOR_ROTATION_ROLL_270_PITCH_270	Roll: 270, Pitch: 270, Yaw: 0
+# 36	MAV_SENSOR_ROTATION_ROLL_90_PITCH_180_YAW_90	Roll: 90, Pitch: 180, Yaw: 90
+# 37	MAV_SENSOR_ROTATION_ROLL_90_YAW_270	Roll: 90, Pitch: 0, Yaw: 270
+# 38	MAV_SENSOR_ROTATION_ROLL_90_PITCH_68_YAW_293	Roll: 90, Pitch: 68, Yaw: 293
+# 39	MAV_SENSOR_ROTATION_PITCH_315	Pitch: 315
+# 40	MAV_SENSOR_ROTATION_ROLL_90_PITCH_315	Roll: 90, Pitch: 315
+# 100	MAV_SENSOR_ROTATION_CUSTOM	Custom orientation
+# ---------------------------------------------------------------------------
+# new_orientation ++	uint8_t		MAV_SENSOR_ORIENTATION	orientation after calibration.
+# scale_factor ++	float			field radius correction factor
+
+def send_mag_cal_progress()->mavlink.MAVLink_mag_cal_progress_message:
+    return mavlink.MAVLink_mag_cal_progress_message(
+        compass_id=0,
+        cal_mask=0,
+        cal_status=0,
+        attempt=0,
+        completion_pct=0,
+        completion_mask=[],
+        direction_x=0,
+        direction_y=0,
+        direction_z=0,
+
+    )
+
+# compass_id	uint8_t			Compass being calibrated.
+# Messages with same value are from the same source (instance).
+# cal_mask	uint8_t			Bitmask of compasses being calibrated.
+# cal_status	uint8_t		MAG_CAL_STATUS	Calibration Status.
+# attempt	uint8_t			Attempt number.
+# completion_pct	uint8_t	%		Completion percentage.
+# completion_mask	uint8_t[10]			Bitmask of sphere sections (see http://en.wikipedia.org/wiki/Geodesic_grid).
+# direction_x	float			Body frame direction vector for display.
+# direction_y	float			Body frame direction vector for display.
+# direction_z	float			Body frame direction vector for display.
+
+
+def send_param_value()->mavlink.MAVLink_param_value_message:
+    return mavlink.MAVLink_param_value_message(
+        param_id=0,
+        param_value=0,
+        param_type=0,
+        param_count=0,
+        param_index=0,
+
+    )
+
+# param_id	char[16]		Onboard parameter id, terminated by NULL if the length is less than 16 human-readable chars and WITHOUT null termination (NULL) byte if the length is exactly 16 chars - applications have to provide 16+1 bytes storage if the ID is stored as string
+# param_value	float		Onboard parameter value
+# param_type	uint8_t	MAV_PARAM_TYPE	Onboard parameter type.
+# ------------------------------------------------------------
+# 1	MAV_PARAM_TYPE_UINT8	8-bit unsigned integer
+# 2	MAV_PARAM_TYPE_INT8	8-bit signed integer
+# 3	MAV_PARAM_TYPE_UINT16	16-bit unsigned integer
+# 4	MAV_PARAM_TYPE_INT16	16-bit signed integer
+# 5	MAV_PARAM_TYPE_UINT32	32-bit unsigned integer
+# 6	MAV_PARAM_TYPE_INT32	32-bit signed integer
+# 7	MAV_PARAM_TYPE_UINT64	64-bit unsigned integer
+# 8	MAV_PARAM_TYPE_INT64	64-bit signed integer
+# 9	MAV_PARAM_TYPE_REAL32	32-bit floating-point
+# 10	MAV_PARAM_TYPE_REAL64	64-bit floating-point
+# -------------------------------------------------------------
+# param_count	uint16_t		Total number of onboard parameters
+# param_index	uint16_t		Index of this onboard parameter
