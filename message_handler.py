@@ -5,6 +5,8 @@ def command_int_handler(client: mavlink.MAVLink, msg: mavlink.MAVLink_command_in
     pass
 
 
+
+
 def command_long_handler(client: mavlink.MAVLink, msg: mavlink.MAVLink_command_long_message):
     pass
 
