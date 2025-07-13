@@ -1,13 +1,44 @@
 from typing import Callable, Dict
-from pymavlink.dialects.v20 import ardupilotmega as mavlink
-from pymavlink import mavutil
-import command_handler
-import message_handler
-import message_builder
+import threading
+
+from .mav_client import mavlink, client, mavutil
+from . import command_handler, message_handler, message_builder
 
 
-client = mavutil.mavlink_connection(
-    device='udpout:0.0.0.0:14604', dialect=mavlink.DIALECT)
+class MessageThread(threading.Thread):
+    def __init__(self):
+        super().__init__()
+
+    def run(self):
+        while True:
+            msg = client.recv_msg()
+            if msg is not None:
+                if (msg.id == mavlink.MAVLINK_MSG_ID_COMMAND_INT or msg.id == mavlink.MAVLINK_MSG_ID_COMMAND_LONG):
+                    print(
+                        f"Received command: {mavlink.enums['MAV_CMD'][msg.command].name} ({msg.param1}, {msg.param2})")
+                    if msg.command == mavlink.MAV_CMD_SET_MESSAGE_INTERVAL:
+                        if msg.param1 in events:
+                            _event, action = events[msg.param1]
+                            events[msg.param1] = (
+                                mavutil.periodic_event(1000000/msg.param2),
+                                action
+                            )
+
+                            client.mav.command_ack_send(
+                                msg.id, mavlink.MAV_RESULT_ACCEPTED)
+                    if msg.command not in commands:
+                        client.mav.command_ack_send(
+                            msg.id, mavlink.MAV_RESULT_DENIED)
+                        continue
+
+                    commands[msg.command](msg)
+
+                if msg.id in handlers:
+                    handlers[msg.id](msg)
+
+            for id, (event, action) in events.items():
+                if event.trigger():
+                    action()
 
 
 events: Dict[int, tuple[mavutil.periodic_event, Callable[[], mavlink.MAVLink_message]]] = {
@@ -67,7 +98,6 @@ commands = {
     mavlink.MAV_CMD_COMPONENT_ARM_DISARM: command_handler.component_arm_disarm,
     mavlink.MAV_CMD_DO_REPOSITION: command_handler.do_reposition,
     mavlink.MAV_CMD_DO_SET_HOME: command_handler.do_set_home,
-    mavlink.MAV_CMD_GET_HOME_POSITION: command_handler.get_home_position,
     mavlink.MAV_CMD_MISSION_START: command_handler.mission_start,
     mavlink.MAV_CMD_NAV_TAKEOFF: command_handler.nav_takeoff,
     mavlink.MAV_CMD_NAV_WAYPOINT: command_handler.nav_waypoint,
@@ -75,30 +105,3 @@ commands = {
     mavlink.MAV_CMD_SET_CAMERA_FOCUS: command_handler.set_camera_focus,
     mavlink.MAV_CMD_SET_CAMERA_ZOOM: command_handler.set_camera_zoom,
 }
-
-while True:
-    msg: mavlink.MAVLink_message = client.recv_msg()
-    if msg is not None:
-        if (msg.id == mavlink.MAVLINK_MSG_ID_COMMAND_INT or msg.id == mavlink.MAVLINK_MSG_ID_COMMAND_LONG):
-            if msg.command == mavlink.MAV_CMD_SET_MESSAGE_INTERVAL:
-                if msg.param1 in events:
-                    _event, action = events[msg.param1]
-                    events[msg.param1] = (
-                        mavutil.periodic_event(msg.param2),
-                        action
-                    )
-
-                    client.mav.command_ack_send(
-                        msg.id, mavlink.MAV_RESULT_ACCEPTED)
-            if msg.command not in commands:
-                client.mav.command_ack_send(msg.id, mavlink.MAV_RESULT_DENIED)
-                continue
-
-            commands[msg.command](client.mav, msg)
-
-        if msg.message_type in handlers:
-            handlers[msg.id](client.mav, msg)
-
-    for id, (event, action) in events.items():
-        if event.trigger():
-            client.mav.send(action())

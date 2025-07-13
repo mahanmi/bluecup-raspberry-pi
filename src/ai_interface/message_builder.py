@@ -1,32 +1,29 @@
-from pymavlink.dialects.v20 import ardupilotmega as mavlink
-
-from utils.time_handlers import *
+from .mav_client import mavlink, client
 
 
-def send_heartbeat() -> mavlink.MAVLink_heartbeat_message:
-    return mavlink.MAVLink_heartbeat_message(
-        mavlink.MAV_TYPE_SUBMARINE,
-        mavlink.MAV_AUTOPILOT_GENERIC,
-        0, 0, 0, 0
+def send_heartbeat():
+    client.mav.heartbeat_send(
+        client.source_system,
+        client.source_component,
+        mavlink.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED & mavlink.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED & mavlink.MAV_MODE_FLAG_SAFETY_ARMED, 0, 0, 0
     )
 
 
 # MPU 6050 , ICM
-def send_raw_imu() -> mavlink.MAVLink_raw_imu_message:
-    return mavlink.MAVLink_raw_imu_message(
-        time_usec=time_usec_handler(),
-        xacc=65535,
-        yacc=65535,
-        zacc=65535,
-        xgyro=65535,
-        ygyro=65535,
-        zgyro=65535,
-        xmag=65535,
-        ymag=65535,
-        zmag=65535,
-        id=65535,
-        temperature=65535
-
+def send_raw_imu():
+    client.mav.raw_imu_send(
+        time_usec=int(client.time_since('') * 1e6),
+        xacc=0,
+        yacc=0,
+        zacc=0,
+        xgyro=0,
+        ygyro=0,
+        zgyro=0,
+        xmag=0,
+        ymag=0,
+        zmag=0,
+        id=0,
+        temperature=0
     )
 
 
@@ -43,9 +40,9 @@ def send_raw_imu() -> mavlink.MAVLink_raw_imu_message:
 # Messages with same value are from the same source (instance).
 # temperature ++	int16_t	cdegC	Temperature, 0: IMU does not provide temperature values. If the IMU is at 0C it must send 1 (0.01C).
 
-def send_gps_raw_int() -> mavlink.MAVLink_gps_raw_int_message:
-    return mavlink.MAVLink_gps_raw_int_message(
-        time_usec=time_usec_handler(),
+def send_gps_raw_int():
+    client.mav.gps_raw_int_send(
+        time_usec=int(client.time_since('') * 1e6),
         fix_type=0,  # change this based on your gps state
         lat=0,
         lon=0,
@@ -55,11 +52,11 @@ def send_gps_raw_int() -> mavlink.MAVLink_gps_raw_int_message:
         vel=65535,
         cog=65535,
         satellites_visible=255,
-        alt_ellipsoid=4294967295,
-        h_acc=4294967295,
-        v_acc=4294967295,
-        vel_acc=4294967295,
-        hdg_acc=4294967295,
+        alt_ellipsoid=0,
+        h_acc=0,
+        v_acc=0,
+        vel_acc=0,
+        hdg_acc=0,
         yaw=65535
 
     )
@@ -93,9 +90,9 @@ def send_gps_raw_int() -> mavlink.MAVLink_gps_raw_int_message:
 # yaw ++	uint16_t	cdeg		invalid:0	Yaw in earth frame from north. Use 0 if this GPS does not provide yaw. Use UINT16_MAX if this GPS is configured to provide yaw and is currently unable to provide it. Use 36000 for north.
 
 
-def send_scaled_pressure() -> mavlink.MAVLink_scaled_pressure_message:
-    return mavlink.MAVLink_scaled_pressure_message(
-        time_boot_ms=time_boot_handler(),
+def send_scaled_pressure():
+    client.mav.scaled_pressure_send(
+        time_boot_ms=int(client.time_since('') * 1e3),
         press_abs=0,
         press_diff=0,
         temperature=0,
@@ -110,9 +107,9 @@ def send_scaled_pressure() -> mavlink.MAVLink_scaled_pressure_message:
 # temperature_press_diff ++	int16_t	cdegC	Differential pressure te
 
 
-def send_scaled_pressure2() -> mavlink.MAVLink_scaled_pressure2_message:
-    return mavlink.MAVLink_scaled_pressure2_message(
-        time_boot_ms=time_boot_handler(),
+def send_scaled_pressure2():
+    client.mav.scaled_pressure2_send(
+        time_boot_ms=int(client.time_since('') * 1e3),
         press_abs=0,
         press_diff=0,
         temperature=0,
@@ -127,9 +124,9 @@ def send_scaled_pressure2() -> mavlink.MAVLink_scaled_pressure2_message:
 # temperature_press_diff ++	int16_t	cdegC	Differential pressure te
 
 
-def send_scaled_pressure3() -> mavlink.MAVLink_scaled_pressure3_message:
-    return mavlink.MAVLink_scaled_pressure3_message(
-        time_boot_ms=time_boot_handler(),
+def send_scaled_pressure3():
+    client.mav.scaled_pressure3_send(
+        time_boot_ms=int(client.time_since('') * 1e3),
         press_abs=0,
         press_diff=0,
         temperature=0,
@@ -143,8 +140,8 @@ def send_scaled_pressure3() -> mavlink.MAVLink_scaled_pressure3_message:
 # temperature_press_diff ++	int16_t	cdegC	Differential pressure te
 
 
-def send_ahrs2() -> mavlink.MAVLink_ahrs2_message:
-    return mavlink.MAVLink_ahrs2_message(
+def send_ahrs2():
+    client.mav.ahrs2_send(
         roll=0,
         pitch=0,
         yaw=0,
@@ -164,9 +161,9 @@ def send_ahrs2() -> mavlink.MAVLink_ahrs2_message:
 
 # ----------------------------------------------------------
 
-def send_attitude() -> mavlink.MAVLink_attitude_message:
-    return mavlink.MAVLink_attitude_message(
-        time_boot_ms=time_boot_handler(),
+def send_attitude():
+    client.mav.attitude_send(
+        time_boot_ms=int(client.time_since('') * 1e3),
         roll=0,
         pitch=0,
         yaw=0,
@@ -186,8 +183,8 @@ def send_attitude() -> mavlink.MAVLink_attitude_message:
 
 # ---------------------------------------------------------------
 
-def send_ekf_status_report() -> mavlink.MAVLink_ekf_status_report_message:
-    return mavlink.MAVLink_ekf_status_report_message(
+def send_ekf_status_report():
+    client.mav.ekf_status_report_send(
         flags=1,
         velocity_variance=0,
         pos_vert_variance=0,
@@ -222,9 +219,9 @@ def send_ekf_status_report() -> mavlink.MAVLink_ekf_status_report_message:
 
 # ----------------------------------------------------------------
 
-def send_global_position_int() -> mavlink.MAVLink_global_position_int_message:
-    return mavlink.MAVLink_global_position_int_message(
-        time_boot_ms=time_boot_handler(),
+def send_global_position_int():
+    client.mav.global_position_int_send(
+        time_boot_ms=int(client.time_since('') * 1e3),
         lat=0,
         lon=0,
         alt=0,
@@ -247,9 +244,9 @@ def send_global_position_int() -> mavlink.MAVLink_global_position_int_message:
 # hdg	uint16_t	cdeg	Vehicle heading (yaw angle), 0.0..359.99 degrees. If unknown, set to: UINT16_MAX
 
 
-def send_local_position_ned() -> mavlink.MAVLink_local_position_ned_message:
-    return mavlink.MAVLink_local_position_ned_message(
-        time_boot_ms=time_boot_handler(),
+def send_local_position_ned():
+    client.mav.local_position_ned_send(
+        time_boot_ms=int(client.time_since('') * 1e3),
         x=0,
         y=0,
         z=0,
@@ -268,8 +265,8 @@ def send_local_position_ned() -> mavlink.MAVLink_local_position_ned_message:
 # vz	float	m/s	Z Speed
 
 
-def send_meminfo() -> mavlink.MAVLink_meminfo_message:
-    return mavlink.MAVLink_meminfo_message(
+def send_meminfo():
+    client.mav.meminfo_send(
         brkval=0,
         freemem=0,
         freemem32=0
@@ -281,8 +278,8 @@ def send_meminfo() -> mavlink.MAVLink_meminfo_message:
 # freemem32 ++	uint32_t	bytes	Free memory (32 bit).
 
 
-def send_mission_current() -> mavlink.MAVLink_mission_current_message:
-    return mavlink.MAVLink_mission_current_message(
+def send_mission_current():
+    client.mav.mission_current_send(
         seq=0,
         total=65535,
         mission_state=0,
@@ -299,9 +296,9 @@ def send_mission_current() -> mavlink.MAVLink_mission_current_message:
 # fence_id ++	uint32_t	invalid:0	Id of current on-vehicle fence plan, or 0 if IDs are not supported or there is no fence loaded. GCS can use this to track changes to the fence plan type. The same value is returned on fence upload (in the MISSION_ACK).
 # rally_points_id ++	uint32_t	invalid:0	Id of current on-vehicle rally point plan, or 0 if IDs are not supported or there are no rally points loaded. GCS can use this to track changes to the rally point plan type. The same value is returned on rally point upload (in the MISSION_ACK).
 
-def send_named_value_float() -> mavlink.MAVLink_named_value_float_message:
-    return mavlink.MAVLink_named_value_float_message(
-        time_boot_ms=time_boot_handler(),
+def send_named_value_float():
+    client.mav.named_value_float_send(
+        time_boot_ms=int(client.time_since('') * 1e3),
         name=b"",
         value=0
     )
@@ -312,8 +309,8 @@ def send_named_value_float() -> mavlink.MAVLink_named_value_float_message:
 # value	float		Floating point value
 
 
-def send_nav_controller_output() -> mavlink.MAVLink_nav_controller_output_message:
-    return mavlink.MAVLink_nav_controller_output_message(
+def send_nav_controller_output():
+    client.mav.nav_controller_output_send(
         nav_roll=0,
         nav_pitch=0,
         nav_bearing=0,
@@ -336,8 +333,8 @@ def send_nav_controller_output() -> mavlink.MAVLink_nav_controller_output_messag
 # xtrack_error	float	m	Current crosstrack error on x-y plane
 
 
-def send_power_status() -> mavlink.MAVLink_power_status_message:
-    return mavlink.MAVLink_power_status_message(
+def send_power_status():
+    client.mav.power_status_send(
         Vcc=0,
         Vservo=0,
         flags=0
@@ -368,19 +365,19 @@ def motor_control(rc1, rc2, rc3, rc4, rc5, rc6):
     # کانال ۶ برای lateral است (حرکت چپ و راست)
 
 
-def send_scaled_imu2() -> mavlink.MAVLink_scaled_imu2_message:
-    return mavlink.MAVLink_scaled_imu2_message(
-        time_boot_ms=time_boot_handler(),
-        xacc=65535,
-        yacc=65535,
-        zacc=65535,
-        xgyro=65535,
-        ygyro=65535,
-        zgyro=65535,
-        xmag=65535,
-        ymag=65535,
-        zmag=65535,
-        temperature=65535
+def send_scaled_imu2():
+    client.mav.scaled_imu2_send(
+        time_boot_ms=int(client.time_since('') * 1e3),
+        xacc=0,
+        yacc=0,
+        zacc=0,
+        xgyro=0,
+        ygyro=0,
+        zgyro=0,
+        xmag=0,
+        ymag=0,
+        zmag=0,
+        temperature=0
     )
 
 
@@ -395,19 +392,19 @@ def send_scaled_imu2() -> mavlink.MAVLink_scaled_imu2_message:
 # zmag	int16_t	mgauss	Z Magnetic field
 # temperature ++	int16_t	cdegC	Temperature, 0: IMU does not provide temperature values. If the IMU is at 0C it must send 1 (0.01C).
 
-def send_scaled_imu3() -> mavlink.MAVLink_scaled_imu3_message:
-    return mavlink.MAVLink_scaled_imu3_message(
-        time_boot_ms=time_boot_handler(),
-        xacc=65535,
-        yacc=65535,
-        zacc=65535,
-        xgyro=65535,
-        ygyro=65535,
-        zgyro=65535,
-        xmag=65535,
-        ymag=65535,
-        zmag=65535,
-        temperature=65535
+def send_scaled_imu3():
+    client.mav.scaled_imu3_send(
+        time_boot_ms=int(client.time_since('') * 1e3),
+        xacc=0,
+        yacc=0,
+        zacc=0,
+        xgyro=0,
+        ygyro=0,
+        zgyro=0,
+        xmag=0,
+        ymag=0,
+        zmag=0,
+        temperature=0
 
     )
 
@@ -423,8 +420,8 @@ def send_scaled_imu3() -> mavlink.MAVLink_scaled_imu3_message:
 # zmag	int16_t	mgauss	Z Magnetic field
 # temperature ++	int16_t	cdegC	Temperature, 0: IMU does not provide temperature values. If the IMU is at 0C it must send 1 (0.01C).
 
-def send_simstate() -> mavlink.MAVLink_simstate_message:
-    return mavlink.MAVLink_simstate_message(
+def send_simstate():
+    client.mav.simstate_send(
         roll=0,
         pitch=0,
         yaw=0,
@@ -456,21 +453,21 @@ def send_simstate() -> mavlink.MAVLink_simstate_message:
 #         "time_unix_usec":None,
 #     }
 
-def send_sys_status() -> mavlink.MAVLink_sys_status_message:
-    return mavlink.MAVLink_sys_status_message(
-        onboard_control_sensors_present=4294967295,
-        onboard_control_sensors_enabled=4294967295,
-        onboard_control_sensors_health=4294967295,
-        load=65535,
-        voltage_battery=65535,
+def send_sys_status():
+    client.mav.sys_status_send(
+        onboard_control_sensors_present=0,
+        onboard_control_sensors_enabled=0,
+        onboard_control_sensors_health=0,
+        load=0,
+        voltage_battery=0,
         current_battery=-1,
         battery_remaining=-1,
-        drop_rate_comm=65535,
-        errors_comm=65535,
-        errors_count1=65535,
-        errors_count2=65535,
-        errors_count3=65535,
-        errors_count4=65535,
+        drop_rate_comm=0,
+        errors_comm=0,
+        errors_count1=0,
+        errors_count2=0,
+        errors_count3=0,
+        errors_count4=0,
 
     )
 
@@ -493,8 +490,8 @@ def send_sys_status() -> mavlink.MAVLink_sys_status_message:
 # onboard_control_sensors_health_extended ++	uint32_t		MAV_SYS_STATUS_SENSOR_EXTENDED	Bitmap showing which onboard controllers and sensors have an error (or are operational). Value of 0: error. Value of 1: healthy.
 
 
-def send_terrain_report() -> mavlink.MAVLink_terrain_report_message:
-    return mavlink.MAVLink_terrain_report_message(
+def send_terrain_report():
+    client.mav.terrain_report_send(
         lat=0,
         lon=0,
         spacing=0,
@@ -506,8 +503,8 @@ def send_terrain_report() -> mavlink.MAVLink_terrain_report_message:
     )
 
 
-def send_vfr_hud() -> mavlink.MAVLink_vfr_hud_message:
-    return mavlink.MAVLink_vfr_hud_message(
+def send_vfr_hud():
+    client.mav.vfr_hud_send(
         airspeed=0,
         groundspeed=0,
         heading=0,
@@ -524,9 +521,9 @@ def send_vfr_hud() -> mavlink.MAVLink_vfr_hud_message:
 # alt	float	m	Current altitude (MSL).
 # climb	float	m/s	Current climb rate.
 
-def send_vibration() -> mavlink.MAVLink_vibration_message:
-    return mavlink.MAVLink_vibration_message(
-        time_usec=time_usec_handler(),
+def send_vibration():
+    client.mav.vibration_send(
+        time_usec=int(client.time_since('') * 1e6),
         vibration_x=0,
         vibration_y=0,
         vibration_z=0,
@@ -545,8 +542,8 @@ def send_vibration() -> mavlink.MAVLink_vibration_message:
 # clipping_2	uint32_t		third accelerometer clipping count
 
 
-def send_fence_status() -> mavlink.MAVLink_fence_status_message:
-    return mavlink.MAVLink_fence_status_message(
+def send_fence_status():
+    client.mav.fence_status_send(
         breach_status=0,
         breach_count=0,
         breach_type=0,
@@ -573,9 +570,9 @@ def send_fence_status() -> mavlink.MAVLink_fence_status_message:
 # 2	FENCE_MITIGATE_VEL_LIMIT	Velocity limiting active to prevent breach
 # -------------------------------------------------------------
 
-def send_servo_output_raw() -> mavlink.MAVLink_servo_output_raw_message:
-    return mavlink.MAVLink_servo_output_raw_message(
-        time_usec=time_usec_handler(),
+def send_servo_output_raw():
+    client.mav.servo_output_raw_send(
+        time_usec=int(client.time_since('') * 1e6),
         port=0,
         servo1_raw=0,
         servo2_raw=0,
@@ -617,9 +614,9 @@ def send_servo_output_raw() -> mavlink.MAVLink_servo_output_raw_message:
 # servo16_raw ++	uint16_t	us	Servo output 16 value
 
 
-def send_rc_channels() -> mavlink.MAVLink_rc_channels_message:
-    return mavlink.MAVLink_rc_channels_message(
-        time_boot_ms=time_boot_handler(),
+def send_rc_channels():
+    client.mav.rc_channels_send(
+        time_boot_ms=int(client.time_since('') * 1e3),
         chancount=0,
         chan1_raw=0,
         chan2_raw=0,
@@ -667,9 +664,9 @@ def send_rc_channels() -> mavlink.MAVLink_rc_channels_message:
 # rssi	uint8_t		Receive signal strength indicator in device-dependent units/scale. Values: [0-254], UINT8_MAX: invalid/unknown.
 
 
-def send_rc_channels_raw() -> mavlink.MAVLink_rc_channels_raw_message:
-    return mavlink.MAVLink_rc_channels_raw_message(
-        time_boot_ms=time_boot_handler(),
+def send_rc_channels_raw():
+    client.mav.rc_channels_raw_send(
+        time_boot_ms=int(client.time_since('') * 1e3),
         port=0,
         chan1_raw=0,
         chan2_raw=0,
@@ -696,8 +693,8 @@ def send_rc_channels_raw() -> mavlink.MAVLink_rc_channels_raw_message:
 # chan8_raw	uint16_t	us	RC channel 8 value.
 # rssi	uint8_t		Receive signal strength indicator in device-dependent units/scale. Values: [0-254], UINT8_MAX: invalid/unknown.
 
-def send_pid_tuning() -> mavlink.MAVLink_pid_tuning_message:
-    return mavlink.MAVLink_pid_tuning_message(
+def send_pid_tuning():
+    client.mav.pid_tuning_send(
         axis=0,
         desired=0,
         achieved=0,
@@ -723,8 +720,8 @@ def send_pid_tuning() -> mavlink.MAVLink_pid_tuning_message:
 # PDmod ++	float		P/D oscillation modifier.
 
 
-def send_ahrs() -> mavlink.MAVLink_ahrs_message:
-    return mavlink.MAVLink_ahrs_message(
+def send_ahrs():
+    client.mav.ahrs_send(
         omegaIx=0,
         omegaIy=0,
         omegaIz=0,
@@ -744,10 +741,10 @@ def send_ahrs() -> mavlink.MAVLink_ahrs_message:
 # error_rp	float		Average error_roll_pitch value.
 # error_yaw	float		Average error_yaw value.
 
-def send_system_time() -> mavlink.MAVLink_system_time_message:
-    return mavlink.MAVLink_system_time_message(
-        time_boot_ms=time_boot_handler(),
-        time_unix_usec=time_usec_handler()
+def send_system_time():
+    client.mav.system_time_send(
+        time_boot_ms=int(client.time_since('') * 1e3),
+        time_unix_usec=int(client.time_since('') * 1e6)
 
     )
 
@@ -756,8 +753,8 @@ def send_system_time() -> mavlink.MAVLink_system_time_message:
 # time_boot_ms	uint32_t	ms	Timestamp (time since system boot).
 
 
-def send_rangefinder() -> mavlink.MAVLink_rangefinder_message:
-    return mavlink.MAVLink_rangefinder_message(
+def send_rangefinder():
+    client.mav.rangefinder_send(
         distance=0,
         voltage=0
     )
@@ -766,9 +763,9 @@ def send_rangefinder() -> mavlink.MAVLink_rangefinder_message:
 # distance	float	m	Distance.
 # voltage	float	V	Raw voltage if available, zero otherwise.
 
-def send_distance_sensor() -> mavlink.MAVLink_distance_sensor_message:
-    return mavlink.MAVLink_distance_sensor_message(
-        time_boot_ms=time_boot_handler(),
+def send_distance_sensor():
+    client.mav.distance_sensor_send(
+        time_boot_ms=int(client.time_since('') * 1e3),
         min_distance=0,
         max_distance=0,
         current_distance=0,
@@ -778,7 +775,7 @@ def send_distance_sensor() -> mavlink.MAVLink_distance_sensor_message:
         covariance=0,
         horizontal_fov=0,
         vertical_fov=0,
-        quaternion=[],
+        quaternion=[0] * 4,
         signal_quality=0,
 
     )
@@ -848,26 +845,22 @@ def send_distance_sensor() -> mavlink.MAVLink_distance_sensor_message:
 # quaternion ++	float[4]		invalid:[0]	Quaternion of the sensor orientation in vehicle body frame (w, x, y, z order, zero-rotation is 1, 0, 0, 0). Zero-rotation is along the vehicle body x-axis. This field is required if the orientation is set to MAV_SENSOR_ROTATION_CUSTOM. Set it to 0 if invalid."
 # signal_quality ++	uint8_t	%	invalid:0	Signal quality of the sensor. Specific to each sensor type, representing the relation of the signal strength with the target reflectivity, distance, size or aspect, but normalised as a percentage. 0 = unknown/unset signal quality, 1 = invalid signal, 100 = perfect signal.
 
-def send_battery_status() -> mavlink.MAVLink_battery_status_message:
-    return mavlink.MAVLink_battery_status_message(
+def send_battery_status():
+    client.mav.battery_status_send(
         id=0,
         battery_function=0,
         type=0,
-        temperature=65535,
-        voltages=[],
+        temperature=32767,
+        voltages=[0] * 16,
         current_battery=-1,
         current_consumed=-1,
         energy_consumed=-1,
         battery_remaining=-1,
         time_remaining=0,
         charge_state=0,
-        voltages_ext=[],
+        voltages_ext=[0] * 4,
         mode=0,
         fault_bitmask=0,
-
-
-
-
     )
 
 # id	uint8_t			Battery ID Messages with same value are from the same source (instance).
@@ -926,13 +919,13 @@ def send_battery_status() -> mavlink.MAVLink_battery_status_message:
 # ------------------------------------------------------------------------------
 
 
-def send_gimbal_device_attitude_status() -> mavlink.MAVLink_gimbal_device_attitude_status_message:
-    return mavlink.MAVLink_gimbal_device_attitude_status_message(
+def send_gimbal_device_attitude_status():
+    client.mav.gimbal_device_attitude_status_send(
         target_system=0,
         target_component=0,
-        time_boot_ms=time_boot_handler(),
+        time_boot_ms=int(client.time_since('') * 1e3),
         flags=0,
-        q=[],
+        q=[0, 0, 0, 0],
         angular_velocity_x=0,
         angular_velocity_y=0,
         angular_velocity_z=0,
@@ -940,8 +933,6 @@ def send_gimbal_device_attitude_status() -> mavlink.MAVLink_gimbal_device_attitu
         delta_yaw=0,
         delta_yaw_velocity=0,
         gimbal_device_id=0
-
-
     )
 # target_system	uint8_t			System ID
 # target_component	uint8_t			Component ID
@@ -984,8 +975,8 @@ def send_gimbal_device_attitude_status() -> mavlink.MAVLink_gimbal_device_attitu
 # gimbal_device_id ++	uint8_t		invalid:0	This field is to be used if the gimbal manager and the gimbal device are the same component and hence have the same component ID. This field is then set a number between 1-6. If the component ID is separate, this field is not required and must be set to 0.
 
 
-def send_mag_cal_report() -> mavlink.MAVLink_mag_cal_report_message:
-    return mavlink.MAVLink_mag_cal_report_message(
+def send_mag_cal_report():
+    client.mav.mag_cal_report_send(
         compass_id=0,
         cal_mask=0,
         cal_status=0,
@@ -994,6 +985,9 @@ def send_mag_cal_report() -> mavlink.MAVLink_mag_cal_report_message:
         ofs_x=0,
         ofs_y=0,
         ofs_z=0,
+        diag_x=0,
+        diag_y=0,
+        diag_z=0,
         offdiag_x=0,
         offdiag_y=0,
         offdiag_z=0,
@@ -1079,14 +1073,14 @@ def send_mag_cal_report() -> mavlink.MAVLink_mag_cal_report_message:
 # scale_factor ++	float			field radius correction factor
 
 
-def send_mag_cal_progress() -> mavlink.MAVLink_mag_cal_progress_message:
-    return mavlink.MAVLink_mag_cal_progress_message(
+def send_mag_cal_progress():
+    client.mav.mag_cal_progress_send(
         compass_id=0,
         cal_mask=0,
         cal_status=0,
         attempt=0,
         completion_pct=0,
-        completion_mask=[],
+        completion_mask=[0] * 10,
         direction_x=0,
         direction_y=0,
         direction_z=0,
@@ -1105,9 +1099,9 @@ def send_mag_cal_progress() -> mavlink.MAVLink_mag_cal_progress_message:
 # direction_z	float			Body frame direction vector for display.
 
 
-def send_param_value() -> mavlink.MAVLink_param_value_message:
-    return mavlink.MAVLink_param_value_message(
-        param_id=0,
+def send_param_value():
+    client.mav.param_value_send(
+        param_id=b'',
         param_value=0,
         param_type=0,
         param_count=0,
