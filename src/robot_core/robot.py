@@ -244,3 +244,4 @@ if __name__ == "__main__":
             f"Connection Error: {e}. Ensure a serial port is available or mock hardware_interface.")
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
+

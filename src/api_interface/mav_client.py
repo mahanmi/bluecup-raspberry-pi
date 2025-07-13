@@ -1,6 +1,7 @@
 from pymavlink.dialects.v20 import ardupilotmega as mavlink
 from pymavlink import mavutil
 from typing import cast, Any
+from common.config import *
 import os
 
 __all__ = [
@@ -24,7 +25,7 @@ os.environ['MAVLINK20'] = '1'  # Ensure MAVLink 2.0 is used
 mavutil.set_dialect(mavlink.DIALECT)
 
 client = TypedMav(
-    device='192.168.55.255:14550',
+    device=f'{IP_BROADCAST}:{PORT_BROADCAST}',
     source_system=mavlink.MAV_TYPE_SUBMARINE,
     source_component=mavlink.MAV_COMP_ID_AUTOPILOT1,
     broadcast=True,

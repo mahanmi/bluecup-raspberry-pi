@@ -1,4 +1,4 @@
-from ai_interface import MessageThread
+from api_interface import MessageThread
 
 message_thread = MessageThread()
 

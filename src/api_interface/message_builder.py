@@ -1,5 +1,8 @@
 from .mav_client import mavlink, client
 
+######################################################
+from robot_core.control import test_class
+
 
 def send_heartbeat():
     client.mav.heartbeat_send(
@@ -44,9 +47,9 @@ def send_gps_raw_int():
     client.mav.gps_raw_int_send(
         time_usec=int(client.time_since('') * 1e6),
         fix_type=0,  # change this based on your gps state
-        lat=0,
-        lon=0,
-        alt=0,
+        lat=int(test_class.lat*1e6),
+        lon=int(test_class.lon*1e6),
+        alt=int(test_class.alt*1e6),
         eph=65535,
         epv=65535,
         vel=65535,

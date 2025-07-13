@@ -1,4 +1,5 @@
 from .mav_client import mavlink, client
+from robot_core.control import test_class
 
 
 def command_int_handler(msg: mavlink.MAVLink_command_int_message):
@@ -14,7 +15,7 @@ def command_ack_handler(msg: mavlink.MAVLink_command_ack_message):
 
 
 def manual_control_handler(msg: mavlink.MAVLink_manual_control_message):
-    pass
+    test_class.move(msg.x/10000,msg.y/10000,msg.z/10000)
 
 
 def heartbeat_handler(msg: mavlink.MAVLink_heartbeat_message):
