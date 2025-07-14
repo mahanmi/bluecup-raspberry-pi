@@ -10,6 +10,11 @@ class MessageThread(threading.Thread):
         super().__init__()
 
     def run(self):
+        while not client.recv_msg():
+            event_heartbeat, send_heartbeat = events[mavlink.MAVLINK_MSG_ID_HEARTBEAT]
+            if event_heartbeat.trigger():
+                send_heartbeat()
+
         while True:
             msg = client.recv_msg()
             if msg is not None:
