@@ -168,9 +168,9 @@ def send_ahrs2():
 def send_attitude():
     client.mav.attitude_send(
         time_boot_ms=int(client.time_since('') * 1e3),
-        roll=6.28318 * random.random() + 3.1415,  # Random roll angle in radians
-        pitch=6.28318 * random.random() + 3.1415,  # Random pitch angle in radians
-        yaw=6.28318 * random.random() + 3.1415,  # Random yaw angle in radians
+        roll=6.28318 * random.random() - 3.1415,  # Random roll angle in radians
+        pitch=6.28318 * random.random() - 3.1415,  # Random pitch angle in radians
+        yaw=6.28318 * random.random() - 3.1415,  # Random yaw angle in radians
         rollspeed=0,
         pitchspeed=0,
         yawspeed=0
