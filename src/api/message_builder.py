@@ -1,4 +1,5 @@
 from .mav_client import mavlink, client
+import random
 
 ######################################################
 from robot_core.control import test_class
@@ -47,9 +48,9 @@ def send_gps_raw_int():
     client.mav.gps_raw_int_send(
         time_usec=int(client.time_since('') * 1e6),
         fix_type=0,  # change this based on your gps state
-        lat=int(test_class.lat*1e6),
-        lon=int(test_class.lon*1e6),
-        alt=int(test_class.alt*1e6),
+        lat=int(test_class.lat*1e7),
+        lon=int(test_class.lon*1e7),
+        alt=int(test_class.alt*1e3),
         eph=65535,
         epv=65535,
         vel=65535,
@@ -167,9 +168,9 @@ def send_ahrs2():
 def send_attitude():
     client.mav.attitude_send(
         time_boot_ms=int(client.time_since('') * 1e3),
-        roll=0,
-        pitch=0,
-        yaw=0,
+        roll=6.28318 * random.random() + 3.1415,  # Random roll angle in radians
+        pitch=6.28318 * random.random() + 3.1415,  # Random pitch angle in radians
+        yaw=6.28318 * random.random() + 3.1415,  # Random yaw angle in radians
         rollspeed=0,
         pitchspeed=0,
         yawspeed=0
@@ -225,9 +226,9 @@ def send_ekf_status_report():
 def send_global_position_int():
     client.mav.global_position_int_send(
         time_boot_ms=int(client.time_since('') * 1e3),
-        lat=0,
-        lon=0,
-        alt=0,
+        lat=int(test_class.lat*1e7),
+        lon=int(test_class.lon*1e7),
+        alt=int(test_class.alt*1e3),
         relative_alt=0,
         vx=0,
         vy=0,
