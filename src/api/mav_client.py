@@ -1,7 +1,7 @@
 from pymavlink.dialects.v20 import ardupilotmega as mavlink
 from pymavlink import mavutil
 from typing import cast, Any
-from common.config import *
+from config import *
 import os
 
 __all__ = [
