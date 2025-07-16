@@ -1,4 +1,5 @@
 from .mav_client import mavlink, client
+from robot_core import robot
 
 
 def set_camera_zoom(msg: mavlink.MAVLink_command_long_message):
@@ -38,6 +39,7 @@ def set_camera_focus(msg: mavlink.MAVLink_command_long_message):
 
 
 def component_arm_disarm(msg: mavlink.MAVLink_command_long_message):
+    robot.is_armed = msg.param1 != 0
     client.mav.command_ack_send(
         msg.command, mavlink.MAV_RESULT_ACCEPTED)
 

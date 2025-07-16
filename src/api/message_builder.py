@@ -1,22 +1,30 @@
-from .mav_client import mavlink, client
+from .mav_client import mavlink, client, VehicleModes
+from robot_core import robot
 import random
 
-######################################################
-from robot_core.control import test_class
+MAX_UINT32 = 0xFFFFFFFF
 
 
 def send_heartbeat():
+    base_mode = mavlink.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED | mavlink.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
+    custom_mode = VehicleModes.MANUAL.value
+
+    if robot.is_armed:
+        base_mode |= mavlink.MAV_MODE_FLAG_SAFETY_ARMED
+
     client.mav.heartbeat_send(
         client.source_system,
         client.source_component,
-        mavlink.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED & mavlink.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED & mavlink.MAV_MODE_FLAG_SAFETY_ARMED, 0, 0, 0
+        base_mode,
+        custom_mode,
+        0, 0
     )
 
 
 # MPU 6050 , ICM
 def send_raw_imu():
     client.mav.raw_imu_send(
-        time_usec=int(client.time_since('') * 1e6),
+        time_usec=int(client.time_since('') * 1e6) % (MAX_UINT32 + 1),
         xacc=0,
         yacc=0,
         zacc=0,
@@ -46,11 +54,11 @@ def send_raw_imu():
 
 def send_gps_raw_int():
     client.mav.gps_raw_int_send(
-        time_usec=int(client.time_since('') * 1e6),
+        time_usec=int(client.time_since('') * 1e6) % (MAX_UINT32 + 1),
         fix_type=0,  # change this based on your gps state
-        lat=int(test_class.lat*1e7),
-        lon=int(test_class.lon*1e7),
-        alt=int(test_class.alt*1e3),
+        lat=int(robot.lat*1e7),
+        lon=int(robot.lon*1e7),
+        alt=int(robot.alt*1e3),
         eph=65535,
         epv=65535,
         vel=65535,
@@ -96,7 +104,7 @@ def send_gps_raw_int():
 
 def send_scaled_pressure():
     client.mav.scaled_pressure_send(
-        time_boot_ms=int(client.time_since('') * 1e3),
+        time_boot_ms=int(client.time_since('') * 1e3) % (MAX_UINT32 + 1),
         press_abs=0,
         press_diff=0,
         temperature=0,
@@ -113,7 +121,7 @@ def send_scaled_pressure():
 
 def send_scaled_pressure2():
     client.mav.scaled_pressure2_send(
-        time_boot_ms=int(client.time_since('') * 1e3),
+        time_boot_ms=int(client.time_since('') * 1e3) % (MAX_UINT32 + 1),
         press_abs=0,
         press_diff=0,
         temperature=0,
@@ -130,7 +138,7 @@ def send_scaled_pressure2():
 
 def send_scaled_pressure3():
     client.mav.scaled_pressure3_send(
-        time_boot_ms=int(client.time_since('') * 1e3),
+        time_boot_ms=int(client.time_since('') * 1e3) % (MAX_UINT32 + 1),
         press_abs=0,
         press_diff=0,
         temperature=0,
@@ -167,7 +175,7 @@ def send_ahrs2():
 
 def send_attitude():
     client.mav.attitude_send(
-        time_boot_ms=int(client.time_since('') * 1e3),
+        time_boot_ms=int(client.time_since('') * 1e3) % (MAX_UINT32 + 1),
         roll=6.28318 * random.random() - 3.1415,  # Random roll angle in radians
         pitch=6.28318 * random.random() - 3.1415,  # Random pitch angle in radians
         yaw=6.28318 * random.random() - 3.1415,  # Random yaw angle in radians
@@ -225,10 +233,10 @@ def send_ekf_status_report():
 
 def send_global_position_int():
     client.mav.global_position_int_send(
-        time_boot_ms=int(client.time_since('') * 1e3),
-        lat=int(test_class.lat*1e7),
-        lon=int(test_class.lon*1e7),
-        alt=int(test_class.alt*1e3),
+        time_boot_ms=int(client.time_since('') * 1e3) % (MAX_UINT32 + 1),
+        lat=int(robot.lat*1e7),
+        lon=int(robot.lon*1e7),
+        alt=int(robot.alt*1e3),
         relative_alt=0,
         vx=0,
         vy=0,
@@ -250,7 +258,7 @@ def send_global_position_int():
 
 def send_local_position_ned():
     client.mav.local_position_ned_send(
-        time_boot_ms=int(client.time_since('') * 1e3),
+        time_boot_ms=int(client.time_since('') * 1e3) % (MAX_UINT32 + 1),
         x=0,
         y=0,
         z=0,
@@ -302,7 +310,7 @@ def send_mission_current():
 
 def send_named_value_float():
     client.mav.named_value_float_send(
-        time_boot_ms=int(client.time_since('') * 1e3),
+        time_boot_ms=int(client.time_since('') * 1e3) % (MAX_UINT32 + 1),
         name=b"",
         value=0
     )
@@ -371,7 +379,7 @@ def motor_control(rc1, rc2, rc3, rc4, rc5, rc6):
 
 def send_scaled_imu2():
     client.mav.scaled_imu2_send(
-        time_boot_ms=int(client.time_since('') * 1e3),
+        time_boot_ms=int(client.time_since('') * 1e3) % (MAX_UINT32 + 1),
         xacc=0,
         yacc=0,
         zacc=0,
@@ -398,7 +406,7 @@ def send_scaled_imu2():
 
 def send_scaled_imu3():
     client.mav.scaled_imu3_send(
-        time_boot_ms=int(client.time_since('') * 1e3),
+        time_boot_ms=int(client.time_since('') * 1e3) % (MAX_UINT32 + 1),
         xacc=0,
         yacc=0,
         zacc=0,
@@ -527,7 +535,7 @@ def send_vfr_hud():
 
 def send_vibration():
     client.mav.vibration_send(
-        time_usec=int(client.time_since('') * 1e6),
+        time_usec=int(client.time_since('') * 1e6) % (MAX_UINT32 + 1),
         vibration_x=0,
         vibration_y=0,
         vibration_z=0,
@@ -576,7 +584,7 @@ def send_fence_status():
 
 def send_servo_output_raw():
     client.mav.servo_output_raw_send(
-        time_usec=int(client.time_since('') * 1e6),
+        time_usec=int(client.time_since('') * 1e6) % (MAX_UINT32 + 1),
         port=0,
         servo1_raw=0,
         servo2_raw=0,
@@ -620,7 +628,7 @@ def send_servo_output_raw():
 
 def send_rc_channels():
     client.mav.rc_channels_send(
-        time_boot_ms=int(client.time_since('') * 1e3),
+        time_boot_ms=int(client.time_since('') * 1e3) % (MAX_UINT32 + 1),
         chancount=0,
         chan1_raw=0,
         chan2_raw=0,
@@ -670,7 +678,7 @@ def send_rc_channels():
 
 def send_rc_channels_raw():
     client.mav.rc_channels_raw_send(
-        time_boot_ms=int(client.time_since('') * 1e3),
+        time_boot_ms=int(client.time_since('') * 1e3) % (MAX_UINT32 + 1),
         port=0,
         chan1_raw=0,
         chan2_raw=0,
@@ -747,8 +755,8 @@ def send_ahrs():
 
 def send_system_time():
     client.mav.system_time_send(
-        time_boot_ms=int(client.time_since('') * 1e3),
-        time_unix_usec=int(client.time_since('') * 1e6)
+        time_boot_ms=int(client.time_since('') * 1e3) % (MAX_UINT32 + 1),
+        time_unix_usec=int(client.time_since('') * 1e6) % (MAX_UINT32 + 1)
 
     )
 
@@ -769,7 +777,7 @@ def send_rangefinder():
 
 def send_distance_sensor():
     client.mav.distance_sensor_send(
-        time_boot_ms=int(client.time_since('') * 1e3),
+        time_boot_ms=int(client.time_since('') * 1e3) % (MAX_UINT32 + 1),
         min_distance=0,
         max_distance=0,
         current_distance=0,
@@ -927,7 +935,7 @@ def send_gimbal_device_attitude_status():
     client.mav.gimbal_device_attitude_status_send(
         target_system=0,
         target_component=0,
-        time_boot_ms=int(client.time_since('') * 1e3),
+        time_boot_ms=int(client.time_since('') * 1e3) % (MAX_UINT32 + 1),
         flags=0,
         q=[0, 0, 0, 0],
         angular_velocity_x=0,

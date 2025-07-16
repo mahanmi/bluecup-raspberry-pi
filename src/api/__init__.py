@@ -6,14 +6,19 @@ from . import command_handler, message_handler, message_builder
 
 
 class MessageThread(threading.Thread):
-    def __init__(self):
+    def __init__(self, on_connect=None, on_disconnect=None):
         super().__init__()
+        self.on_connected = on_connect
+        self.on_disconnection = on_disconnect
 
     def run(self):
         while not client.recv_msg():
             event_heartbeat, send_heartbeat = events[mavlink.MAVLINK_MSG_ID_HEARTBEAT]
             if event_heartbeat.trigger():
                 send_heartbeat()
+
+        if self.on_connected:
+            self.on_connected()
 
         while True:
             msg = client.recv_msg()
