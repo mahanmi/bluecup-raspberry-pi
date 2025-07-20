@@ -63,16 +63,17 @@ def send_raw_imu()->mavlink.MAVLink_raw_imu_message:
 
 ### یک نمونه از پیاده‌سازی:
 
-‍‍```python
 
+
+
+
+```python
 def set_camera_zoom(msg: mavlink.MAVLink_command_long_message):
   #to be done
-  
 
 
 ```
 
-
-
+توضیحات بیشتر در مورد پارامتر‌ها در زیر توابع
 
 
