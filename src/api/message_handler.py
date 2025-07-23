@@ -39,6 +39,10 @@ params: dict[bytes, float] = {
 
 }
 
+params_index: dict[bytes, int] = {
+    b'PARAM_1': 0,
+}
+
 
 def param_request_list_handler(msg: mavlink.MAVLink_param_request_list_message):
     print(f"{msg.target_system} {msg.target_component} requested parameters")
@@ -46,7 +50,17 @@ def param_request_list_handler(msg: mavlink.MAVLink_param_request_list_message):
         return
     for param_id, value in params.items():
         client.mav.param_value_send(
-            param_id, value, mavlink.MAV_PARAM_TYPE_REAL32, len(params), 65535)
+            param_id, value, mavlink.MAV_PARAM_TYPE_REAL32, len(params), params_index[param_id])
+
+
+def param_request_read_handler(msg: mavlink.MAVLink_param_request_read_message):
+    print(f"{msg.target_system} {msg.target_component} requested parameter {msg.param_id}")
+    if msg.target_system != client.source_system or (msg.target_component != client.source_component and msg.target_component != mavlink.MAV_COMP_ID_ALL):
+        return
+    if msg.param_id in params:
+        value = params[msg.param_id]
+        client.mav.param_value_send(
+            msg.param_id, value, mavlink.MAV_PARAM_TYPE_REAL32, len(params), params_index[msg.param_id])
 
 
 def param_set_handler(msg: mavlink.MAVLink_param_set_message):

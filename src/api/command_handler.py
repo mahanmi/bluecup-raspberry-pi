@@ -103,8 +103,10 @@ def request_message(msg: mavlink.MAVLink_command_long_message):
 # msg.param7:Target address for requested message (if message has target address fields). 0: Flight-stack default, 1: address of requester, 2: broadcast.	min: 0 max: 2 inc: 1
 
 
-# def get_home_position(msg: mavlink.MAVLink_command_int_message):
-#     pass
+def get_home_position(msg: mavlink.MAVLink_command_int_message):
+    client.mav.command_ack_send(
+        msg.command, mavlink.MAV_RESULT_ACCEPTED)
+    # This command is used to request the home position from the autopilot.
 
 
 def mission_start(msg: mavlink.MAVLink_command_long_message):

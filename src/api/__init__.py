@@ -63,6 +63,7 @@ events: Dict[int, tuple[mavutil.periodic_event, Callable[[], mavlink.MAVLink_mes
     mavlink.MAVLINK_MSG_ID_GLOBAL_POSITION_INT: (mavutil.periodic_event(3), message_builder.send_global_position_int),
     mavlink.MAVLINK_MSG_ID_GPS_RAW_INT: (mavutil.periodic_event(2), message_builder.send_gps_raw_int),
     mavlink.MAVLINK_MSG_ID_HEARTBEAT: (mavutil.periodic_event(1), message_builder.send_heartbeat),
+    mavlink.MAVLINK_MSG_ID_HOME_POSITION: (mavutil.periodic_event(3), message_builder.send_home_position),
     mavlink.MAVLINK_MSG_ID_MAG_CAL_PROGRESS: (mavutil.periodic_event(3), message_builder.send_mag_cal_progress),
     mavlink.MAVLINK_MSG_ID_MAG_CAL_REPORT: (mavutil.periodic_event(3), message_builder.send_mag_cal_report),
     mavlink.MAVLINK_MSG_ID_MEMINFO: (mavutil.periodic_event(2), message_builder.send_meminfo),
@@ -100,6 +101,7 @@ handlers = {
     mavlink.MAVLINK_MSG_ID_MISSION_REQUEST_INT: message_handler.mission_request_int_handler,
     mavlink.MAVLINK_MSG_ID_MISSION_REQUEST: message_handler.mission_request_handler,
     mavlink.MAVLINK_MSG_ID_PARAM_REQUEST_LIST: message_handler.param_request_list_handler,
+    mavlink.MAVLINK_MSG_ID_PARAM_REQUEST_READ: message_handler.param_request_read_handler,
     mavlink.MAVLINK_MSG_ID_PARAM_SET: message_handler.param_set_handler,
     mavlink.MAVLINK_MSG_ID_SET_POSITION_TARGET_LOCAL_NED: message_handler.set_position_target_local_ned_handler,
 }
