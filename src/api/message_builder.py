@@ -257,6 +257,35 @@ async def send_global_position_int():
 # hdg	uint16_t	cdeg	Vehicle heading (yaw angle), 0.0..359.99 degrees. If unknown, set to: UINT16_MAX
 
 
+async def send_home_position():
+    await client.mav.home_position_send(
+        time_usec=int(client.time_since('') * 1e6) % (MAX_UINT32 + 1),
+        latitude=int(robot.lat*1e7),
+        longitude=int(robot.lon*1e7),
+        altitude=int(robot.alt*1e3),
+        x=0,
+        y=0,
+        z=0,
+        q=[0, 0, 0, 0],
+        approach_x=0,
+        approach_y=0,
+        approach_z=0
+    )
+
+
+# latitude	int32_t	degE7	Latitude (WGS84)
+# longitude	int32_t	degE7	Longitude (WGS84)
+# altitude	int32_t	mm	Altitude (MSL). Positive for up.
+# x	float	m	Local X position of this position in the local coordinate frame (NED)
+# y	float	m	Local Y position of this position in the local coordinate frame (NED)
+# z	float	m	Local Z position of this position in the local coordinate frame (NED: positive "down")
+# q	float[4]		Quaternion indicating world-to-surface-normal and heading transformation of the takeoff position. Used to indicate the heading and slope of the ground. All fields should be set to NaN if an accurate quaternion for both heading and surface slope cannot be supplied.
+# approach_x	float	m	Local X position of the end of the approach vector. Multicopters should set this position based on their takeoff path. Grass-landing fixed wing aircraft should set it the same way as multicopters. Runway-landing fixed wing aircraft should set it to the opposite direction of the takeoff, assuming the takeoff happened from the threshold / touchdown zone.
+# approach_y	float	m	Local Y position of the end of the approach vector. Multicopters should set this position based on their takeoff path. Grass-landing fixed wing aircraft should set it the same way as multicopters. Runway-landing fixed wing aircraft should set it to the opposite direction of the takeoff, assuming the takeoff happened from the threshold / touchdown zone.
+# approach_z	float	m	Local Z position of the end of the approach vector. Multicopters should set this position based on their takeoff path. Grass-landing fixed wing aircraft should set it the same way as multicopters. Runway-landing fixed wing aircraft should set it to the opposite direction of the takeoff, assuming the takeoff happened from the threshold / touchdown zone.
+# time_usec ++	uint64_t	us	Timestamp (UNIX Epoch time or time since system boot). The receiving end can infer timestamp format (since 1.1.1970 or since system boot) by checking for the magnitude of the number.
+
+
 async def send_local_position_ned():
     await client.mav.local_position_ned_send(
         time_boot_ms=int(client.time_since('') * 1e3) % (MAX_UINT32 + 1),
@@ -1113,32 +1142,32 @@ async def send_mag_cal_progress():
 
 
 async def send_param_value():
-    await client.mav.param_value_send(
-        param_id=b'',
-        param_value=0,
-        param_type=0,
-        param_count=0,
-        param_index=0,
+    # await client.mav.param_value_send(
+    #     param_id=b'',
+    #     param_value=0,
+    #     param_type=0,
+    #     param_count=0,
+    #     param_index=0,
 
-    )
+    # )
 
-# param_id	char[16]		Onboard parameter id, terminated by NULL if the length is less than 16 human-readable chars and WITHOUT null termination (NULL) byte if the length is exactly 16 chars - applications have to provide 16+1 bytes storage if the ID is stored as string
-# param_value	float		Onboard parameter value
-# param_type	uint8_t	MAV_PARAM_TYPE	Onboard parameter type.
-# ------------------------------------------------------------
-# 1	MAV_PARAM_TYPE_UINT8	8-bit unsigned integer
-# 2	MAV_PARAM_TYPE_INT8	8-bit signed integer
-# 3	MAV_PARAM_TYPE_UINT16	16-bit unsigned integer
-# 4	MAV_PARAM_TYPE_INT16	16-bit signed integer
-# 5	MAV_PARAM_TYPE_UINT32	32-bit unsigned integer
-# 6	MAV_PARAM_TYPE_INT32	32-bit signed integer
-# 7	MAV_PARAM_TYPE_UINT64	64-bit unsigned integer
-# 8	MAV_PARAM_TYPE_INT64	64-bit signed integer
-# 9	MAV_PARAM_TYPE_REAL32	32-bit floating-point
-# 10	MAV_PARAM_TYPE_REAL64	64-bit floating-point
-# -------------------------------------------------------------
-# param_count	uint16_t		Total number of onboard parameters
-# param_index	uint16_t		Index of this onboard parameter
+    # param_id	char[16]		Onboard parameter id, terminated by NULL if the length is less than 16 human-readable chars and WITHOUT null termination (NULL) byte if the length is exactly 16 chars - applications have to provide 16+1 bytes storage if the ID is stored as string
+    # param_value	float		Onboard parameter value
+    # param_type	uint8_t	MAV_PARAM_TYPE	Onboard parameter type.
+    # ------------------------------------------------------------
+    # 1	MAV_PARAM_TYPE_UINT8	8-bit unsigned integer
+    # 2	MAV_PARAM_TYPE_INT8	8-bit signed integer
+    # 3	MAV_PARAM_TYPE_UINT16	16-bit unsigned integer
+    # 4	MAV_PARAM_TYPE_INT16	16-bit signed integer
+    # 5	MAV_PARAM_TYPE_UINT32	32-bit unsigned integer
+    # 6	MAV_PARAM_TYPE_INT32	32-bit signed integer
+    # 7	MAV_PARAM_TYPE_UINT64	64-bit unsigned integer
+    # 8	MAV_PARAM_TYPE_INT64	64-bit signed integer
+    # 9	MAV_PARAM_TYPE_REAL32	32-bit floating-point
+    # 10	MAV_PARAM_TYPE_REAL64	64-bit floating-point
+    # -------------------------------------------------------------
+    # param_count	uint16_t		Total number of onboard parameters
+    # param_index	uint16_t		Index of this onboard parameter
 
 
 events: Dict[int, tuple[float, Callable]] = {
