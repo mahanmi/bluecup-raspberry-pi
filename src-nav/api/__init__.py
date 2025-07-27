@@ -1,119 +1,103 @@
-from typing import Callable, Dict
-import threading
+import asyncio
+import logging
 
-from .mav_client import mavlink, client, mavutil
-from . import command_handler, message_handler, message_builder
+from .mavlink import mavlink, client
+from . import message_handler, command_handler, message_builder
 
 
-class MessageThread(threading.Thread):
-    def __init__(self, on_connect=None, on_disconnect=None):
+logging.basicConfig()
+logging.getLogger('api').setLevel(logging.INFO)
+
+
+class AsyncMessageThread:
+    def __init__(self):
         super().__init__()
-        self.on_connected = on_connect
-        self.on_disconnection = on_disconnect
+        self.running = False
+        self.connected = False
+        self.tasks = []
 
-    def run(self):
-        while not client.recv_msg():
-            event_heartbeat, send_heartbeat = events[mavlink.MAVLINK_MSG_ID_HEARTBEAT]
-            if event_heartbeat.trigger():
-                send_heartbeat()
-
-        if self.on_connected:
-            self.on_connected()
-
+    async def periodic_task(self, task_id: str, interval: float, action):
+        """
+        A self-correcting asynchronous task that runs periodically.
+        It catches asyncio.CancelledError to handle graceful shutdown.
+        """
+        import asyncio
+        import time
+        print(f"STARTING -> Task '{task_id}' with {interval:.3f}s interval.")
         while True:
-            msg = client.recv_msg()
-            if msg is not None:
-                if (msg.id == mavlink.MAVLINK_MSG_ID_COMMAND_INT or msg.id == mavlink.MAVLINK_MSG_ID_COMMAND_LONG):
-                    print(
-                        f"Received command: {mavlink.enums['MAV_CMD'][msg.command].name} ({msg.param1}, {msg.param2})")
-                    if msg.command == mavlink.MAV_CMD_SET_MESSAGE_INTERVAL:
-                        if msg.param1 in events:
-                            _event, action = events[msg.param1]
-                            events[msg.param1] = (
-                                mavutil.periodic_event(1000000/msg.param2),
-                                action
-                            )
+            start_time = time.perf_counter()
 
-                            client.mav.command_ack_send(
-                                msg.id, mavlink.MAV_RESULT_ACCEPTED)
-                    if msg.command not in commands:
-                        client.mav.command_ack_send(
-                            msg.id, mavlink.MAV_RESULT_DENIED)
-                        continue
+            await action()
 
-                    commands[msg.command](msg)
+            # Self-correct the sleep time to prevent drift
+            elapsed = time.perf_counter() - start_time
+            sleep_for = max(0, interval - elapsed)
 
-                if msg.id in handlers:
-                    handlers[msg.id](msg)
+            try:
+                # The main wait. This is where other tasks get to run.
+                await asyncio.sleep(sleep_for)
+            except asyncio.CancelledError:
+                # This block executes when task.cancel() is called on this task.
+                print(f"CANCELLED -> Task '{task_id}'")
+                break  # Exit the loop to end the task.
 
-            for id, (event, action) in events.items():
-                if event.trigger():
-                    action()
+    async def recv_msg_task(self):
+        while self.running:
+            msg = await client.recv_msg()
 
+            if not msg:
+                logging.warning("No message received")
+                continue
 
-events: Dict[int, tuple[mavutil.periodic_event, Callable[[], mavlink.MAVLink_message]]] = {
-    mavlink.MAVLINK_MSG_ID_AHRS: (mavutil.periodic_event(16), message_builder.send_ahrs),
-    mavlink.MAVLINK_MSG_ID_AHRS2: (mavutil.periodic_event(16), message_builder.send_ahrs2),
-    mavlink.MAVLINK_MSG_ID_ATTITUDE: (mavutil.periodic_event(16), message_builder.send_attitude),
-    mavlink.MAVLINK_MSG_ID_BATTERY_STATUS: (mavutil.periodic_event(3), message_builder.send_battery_status),
-    mavlink.MAVLINK_MSG_ID_DISTANCE_SENSOR: (mavutil.periodic_event(3), message_builder.send_distance_sensor),
-    mavlink.MAVLINK_MSG_ID_EKF_STATUS_REPORT: (mavutil.periodic_event(3), message_builder.send_ekf_status_report),
-    mavlink.MAVLINK_MSG_ID_FENCE_STATUS: (mavutil.periodic_event(2), message_builder.send_fence_status),
-    mavlink.MAVLINK_MSG_ID_GIMBAL_DEVICE_ATTITUDE_STATUS: (mavutil.periodic_event(16), message_builder.send_gimbal_device_attitude_status),
-    mavlink.MAVLINK_MSG_ID_GLOBAL_POSITION_INT: (mavutil.periodic_event(3), message_builder.send_global_position_int),
-    mavlink.MAVLINK_MSG_ID_GPS_RAW_INT: (mavutil.periodic_event(2), message_builder.send_gps_raw_int),
-    mavlink.MAVLINK_MSG_ID_HEARTBEAT: (mavutil.periodic_event(1), message_builder.send_heartbeat),
-    mavlink.MAVLINK_MSG_ID_HOME_POSITION: (mavutil.periodic_event(3), message_builder.send_home_position),
-    mavlink.MAVLINK_MSG_ID_MAG_CAL_PROGRESS: (mavutil.periodic_event(3), message_builder.send_mag_cal_progress),
-    mavlink.MAVLINK_MSG_ID_MAG_CAL_REPORT: (mavutil.periodic_event(3), message_builder.send_mag_cal_report),
-    mavlink.MAVLINK_MSG_ID_MEMINFO: (mavutil.periodic_event(2), message_builder.send_meminfo),
-    mavlink.MAVLINK_MSG_ID_NAV_CONTROLLER_OUTPUT: (mavutil.periodic_event(2), message_builder.send_nav_controller_output),
-    mavlink.MAVLINK_MSG_ID_PARAM_VALUE: (mavutil.periodic_event(2), message_builder.send_param_value),
-    mavlink.MAVLINK_MSG_ID_PID_TUNING: (mavutil.periodic_event(10), message_builder.send_pid_tuning),
-    mavlink.MAVLINK_MSG_ID_POWER_STATUS: (mavutil.periodic_event(2), message_builder.send_power_status),
-    mavlink.MAVLINK_MSG_ID_RANGEFINDER: (mavutil.periodic_event(3), message_builder.send_rangefinder),
-    mavlink.MAVLINK_MSG_ID_RAW_IMU: (mavutil.periodic_event(2), message_builder.send_raw_imu),
-    mavlink.MAVLINK_MSG_ID_RC_CHANNELS_RAW: (mavutil.periodic_event(2), message_builder.send_rc_channels_raw),
-    mavlink.MAVLINK_MSG_ID_RC_CHANNELS: (mavutil.periodic_event(2), message_builder.send_rc_channels),
-    mavlink.MAVLINK_MSG_ID_SCALED_IMU2: (mavutil.periodic_event(2), message_builder.send_scaled_imu2),
-    mavlink.MAVLINK_MSG_ID_SCALED_IMU3: (mavutil.periodic_event(2), message_builder.send_scaled_imu3),
-    mavlink.MAVLINK_MSG_ID_SCALED_PRESSURE: (mavutil.periodic_event(2), message_builder.send_scaled_pressure),
-    mavlink.MAVLINK_MSG_ID_SCALED_PRESSURE2: (mavutil.periodic_event(2), message_builder.send_scaled_pressure2),
-    mavlink.MAVLINK_MSG_ID_SCALED_PRESSURE3: (mavutil.periodic_event(2), message_builder.send_scaled_pressure3),
-    mavlink.MAVLINK_MSG_ID_SERVO_OUTPUT_RAW: (mavutil.periodic_event(2), message_builder.send_servo_output_raw),
-    mavlink.MAVLINK_MSG_ID_SIMSTATE: (mavutil.periodic_event(10), message_builder.send_simstate),
-    mavlink.MAVLINK_MSG_ID_SYS_STATUS: (mavutil.periodic_event(2), message_builder.send_sys_status),
-    mavlink.MAVLINK_MSG_ID_SYSTEM_TIME: (mavutil.periodic_event(3), message_builder.send_system_time),
-    mavlink.MAVLINK_MSG_ID_VFR_HUD: (mavutil.periodic_event(16), message_builder.send_vfr_hud),
-    mavlink.MAVLINK_MSG_ID_VIBRATION: (mavutil.periodic_event(3), message_builder.send_vibration),
-}
+            if (msg.id == mavlink.MAVLINK_MSG_ID_COMMAND_INT or msg.id == mavlink.MAVLINK_MSG_ID_COMMAND_LONG):
+                if msg.command in command_handler.handlers:
+                    command_handler.handlers[msg.command](msg)
+                else:
+                    logging.warning(
+                        f"Unhandled command: {mavlink.enums['MAV_CMD'][msg.command].name} ({msg.param1}, {msg.param2})")
+            elif msg.id in message_handler.handlers:
+                message_handler.handlers[msg.id](msg)
+            else:
+                logging.warning(
+                    f"Unhandled message: {mavlink.enums[msg.id].name}")
 
-handlers = {
-    mavlink.MAVLINK_MSG_ID_COMMAND_ACK: message_handler.command_ack_handler,
-    mavlink.MAVLINK_MSG_ID_COMMAND_INT: message_handler.command_int_handler,
-    mavlink.MAVLINK_MSG_ID_COMMAND_LONG: message_handler.command_long_handler,
-    mavlink.MAVLINK_MSG_ID_HEARTBEAT: message_handler.heartbeat_handler,
-    mavlink.MAVLINK_MSG_ID_MANUAL_CONTROL: message_handler.manual_control_handler,
-    mavlink.MAVLINK_MSG_ID_MISSION_ACK: message_handler.mission_ack_handler,
-    mavlink.MAVLINK_MSG_ID_MISSION_COUNT: message_handler.mission_count_handler,
-    mavlink.MAVLINK_MSG_ID_MISSION_ITEM_INT: message_handler.mission_item_int_handler,
-    mavlink.MAVLINK_MSG_ID_MISSION_ITEM: message_handler.mission_item_handler,
-    mavlink.MAVLINK_MSG_ID_MISSION_REQUEST_INT: message_handler.mission_request_int_handler,
-    mavlink.MAVLINK_MSG_ID_MISSION_REQUEST: message_handler.mission_request_handler,
-    mavlink.MAVLINK_MSG_ID_PARAM_REQUEST_LIST: message_handler.param_request_list_handler,
-    mavlink.MAVLINK_MSG_ID_PARAM_REQUEST_READ: message_handler.param_request_read_handler,
-    mavlink.MAVLINK_MSG_ID_PARAM_SET: message_handler.param_set_handler,
-    mavlink.MAVLINK_MSG_ID_SET_POSITION_TARGET_LOCAL_NED: message_handler.set_position_target_local_ned_handler,
-}
+    async def start(self):
+        """Start the message thread"""
+        logging.info("Starting message thread")
+        if self.running:
+            logging.warning("Message thread is already running")
+            return
 
-commands = {
-    mavlink.MAV_CMD_COMPONENT_ARM_DISARM: command_handler.component_arm_disarm,
-    mavlink.MAV_CMD_DO_REPOSITION: command_handler.do_reposition,
-    mavlink.MAV_CMD_DO_SET_HOME: command_handler.do_set_home,
-    mavlink.MAV_CMD_MISSION_START: command_handler.mission_start,
-    mavlink.MAV_CMD_NAV_TAKEOFF: command_handler.nav_takeoff,
-    mavlink.MAV_CMD_NAV_WAYPOINT: command_handler.nav_waypoint,
-    mavlink.MAV_CMD_REQUEST_MESSAGE: command_handler.request_message,
-    mavlink.MAV_CMD_SET_CAMERA_FOCUS: command_handler.set_camera_focus,
-    mavlink.MAV_CMD_SET_CAMERA_ZOOM: command_handler.set_camera_zoom,
-}
+        # Clear existing tasks to avoid duplicates
+        for task in self.tasks:
+            task.cancel()
+        self.tasks = []
+
+        self.running = True
+
+        # Start the periodic tasks
+        for event_id, (interval, action) in message_builder.events.items():
+            task = asyncio.create_task(self.periodic_task(
+                str(event_id), interval, action))
+            self.tasks.append(task)
+
+        # Start the message receiving loop
+        receiver_task = asyncio.create_task(self.recv_msg_task())
+        self.tasks.append(receiver_task)
+
+    def stop(self):
+        """Stop the message thread by cancelling only its own tasks."""
+        if not self.tasks:
+            logging.warning("No message thread tasks to stop.")
+            return
+
+        logging.info(f"Stopping {len(self.tasks)} message thread tasks...")
+        self.running = False
+
+        # Cancel only the tasks this class created
+        for task in self.tasks:
+            task.cancel()
+
+        # Clear the list
+        self.tasks = []
+        logging.info("Message thread tasks cancelled.")

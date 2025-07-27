@@ -1,16 +1,8 @@
-from .mav_client import mavlink, client
+from .mavlink import mavlink, client
 
 x = 0.0
 y = 0.0
 z = 0.0
-
-
-def command_int_handler(msg: mavlink.MAVLink_command_int_message):
-    pass
-
-
-def command_long_handler(msg: mavlink.MAVLink_command_long_message):
-    pass
 
 
 def command_ack_handler(msg: mavlink.MAVLink_command_ack_message):
@@ -75,3 +67,19 @@ def mission_item_handler(msg: mavlink.MAVLink_mission_item_message):
 
 def mission_item_int_handler(msg: mavlink.MAVLink_mission_item_int_message):
     pass
+
+
+handlers = {
+    mavlink.MAVLINK_MSG_ID_COMMAND_ACK: command_ack_handler,
+    mavlink.MAVLINK_MSG_ID_HEARTBEAT: heartbeat_handler,
+    mavlink.MAVLINK_MSG_ID_MANUAL_CONTROL: manual_control_handler,
+    mavlink.MAVLINK_MSG_ID_MISSION_ACK: mission_ack_handler,
+    mavlink.MAVLINK_MSG_ID_MISSION_COUNT: mission_count_handler,
+    mavlink.MAVLINK_MSG_ID_MISSION_ITEM_INT: mission_item_int_handler,
+    mavlink.MAVLINK_MSG_ID_MISSION_ITEM: mission_item_handler,
+    mavlink.MAVLINK_MSG_ID_MISSION_REQUEST_INT: mission_request_int_handler,
+    mavlink.MAVLINK_MSG_ID_MISSION_REQUEST: mission_request_handler,
+    mavlink.MAVLINK_MSG_ID_PARAM_REQUEST_LIST: param_request_list_handler,
+    mavlink.MAVLINK_MSG_ID_PARAM_SET: param_set_handler,
+    mavlink.MAVLINK_MSG_ID_SET_POSITION_TARGET_LOCAL_NED: set_position_target_local_ned_handler,
+}

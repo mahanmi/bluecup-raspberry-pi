@@ -1,18 +1,19 @@
-from .mav_client import mavlink, client, VehicleModes
+from .mavlink import mavlink, client, VehicleModes
+from typing import Dict, Callable
 from robot_core import robot
 import random
 
 MAX_UINT32 = 0xFFFFFFFF
 
 
-def send_heartbeat():
+async def send_heartbeat():
     base_mode = mavlink.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED | mavlink.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
     custom_mode = VehicleModes.MANUAL.value
 
     if robot.is_armed:
         base_mode |= mavlink.MAV_MODE_FLAG_SAFETY_ARMED
 
-    client.mav.heartbeat_send(
+    await client.mav.heartbeat_send(
         client.source_system,
         client.source_component,
         base_mode,
@@ -22,8 +23,8 @@ def send_heartbeat():
 
 
 # MPU 6050 , ICM
-def send_raw_imu():
-    client.mav.raw_imu_send(
+async def send_raw_imu():
+    await client.mav.raw_imu_send(
         time_usec=int(client.time_since('') * 1e6) % (MAX_UINT32 + 1),
         xacc=0,
         yacc=0,
@@ -52,8 +53,8 @@ def send_raw_imu():
 # Messages with same value are from the same source (instance).
 # temperature ++	int16_t	cdegC	Temperature, 0: IMU does not provide temperature values. If the IMU is at 0C it must send 1 (0.01C).
 
-def send_gps_raw_int():
-    client.mav.gps_raw_int_send(
+async def send_gps_raw_int():
+    await client.mav.gps_raw_int_send(
         time_usec=int(client.time_since('') * 1e6) % (MAX_UINT32 + 1),
         fix_type=0,  # change this based on your gps state
         lat=int(robot.lat*1e7),
@@ -102,8 +103,8 @@ def send_gps_raw_int():
 # yaw ++	uint16_t	cdeg		invalid:0	Yaw in earth frame from north. Use 0 if this GPS does not provide yaw. Use UINT16_MAX if this GPS is configured to provide yaw and is currently unable to provide it. Use 36000 for north.
 
 
-def send_scaled_pressure():
-    client.mav.scaled_pressure_send(
+async def send_scaled_pressure():
+    await client.mav.scaled_pressure_send(
         time_boot_ms=int(client.time_since('') * 1e3) % (MAX_UINT32 + 1),
         press_abs=0,
         press_diff=0,
@@ -119,8 +120,8 @@ def send_scaled_pressure():
 # temperature_press_diff ++	int16_t	cdegC	Differential pressure te
 
 
-def send_scaled_pressure2():
-    client.mav.scaled_pressure2_send(
+async def send_scaled_pressure2():
+    await client.mav.scaled_pressure2_send(
         time_boot_ms=int(client.time_since('') * 1e3) % (MAX_UINT32 + 1),
         press_abs=0,
         press_diff=0,
@@ -136,8 +137,8 @@ def send_scaled_pressure2():
 # temperature_press_diff ++	int16_t	cdegC	Differential pressure te
 
 
-def send_scaled_pressure3():
-    client.mav.scaled_pressure3_send(
+async def send_scaled_pressure3():
+    await client.mav.scaled_pressure3_send(
         time_boot_ms=int(client.time_since('') * 1e3) % (MAX_UINT32 + 1),
         press_abs=0,
         press_diff=0,
@@ -152,8 +153,8 @@ def send_scaled_pressure3():
 # temperature_press_diff ++	int16_t	cdegC	Differential pressure te
 
 
-def send_ahrs2():
-    client.mav.ahrs2_send(
+async def send_ahrs2():
+    await client.mav.ahrs2_send(
         roll=0,
         pitch=0,
         yaw=0,
@@ -173,8 +174,8 @@ def send_ahrs2():
 
 # ----------------------------------------------------------
 
-def send_attitude():
-    client.mav.attitude_send(
+async def send_attitude():
+    await client.mav.attitude_send(
         time_boot_ms=int(client.time_since('') * 1e3) % (MAX_UINT32 + 1),
         roll=6.28318 * random.random() - 3.1415,  # Random roll angle in radians
         pitch=6.28318 * random.random() - 3.1415,  # Random pitch angle in radians
@@ -195,8 +196,8 @@ def send_attitude():
 
 # ---------------------------------------------------------------
 
-def send_ekf_status_report():
-    client.mav.ekf_status_report_send(
+async def send_ekf_status_report():
+    await client.mav.ekf_status_report_send(
         flags=1,
         velocity_variance=0,
         pos_vert_variance=0,
@@ -231,8 +232,8 @@ def send_ekf_status_report():
 
 # ----------------------------------------------------------------
 
-def send_global_position_int():
-    client.mav.global_position_int_send(
+async def send_global_position_int():
+    await client.mav.global_position_int_send(
         time_boot_ms=int(client.time_since('') * 1e3) % (MAX_UINT32 + 1),
         lat=int(robot.lat*1e7),
         lon=int(robot.lon*1e7),
@@ -256,8 +257,8 @@ def send_global_position_int():
 # hdg	uint16_t	cdeg	Vehicle heading (yaw angle), 0.0..359.99 degrees. If unknown, set to: UINT16_MAX
 
 
-def send_local_position_ned():
-    client.mav.local_position_ned_send(
+async def send_local_position_ned():
+    await client.mav.local_position_ned_send(
         time_boot_ms=int(client.time_since('') * 1e3) % (MAX_UINT32 + 1),
         x=0,
         y=0,
@@ -277,8 +278,8 @@ def send_local_position_ned():
 # vz	float	m/s	Z Speed
 
 
-def send_meminfo():
-    client.mav.meminfo_send(
+async def send_meminfo():
+    await client.mav.meminfo_send(
         brkval=0,
         freemem=0,
         freemem32=0
@@ -290,8 +291,8 @@ def send_meminfo():
 # freemem32 ++	uint32_t	bytes	Free memory (32 bit).
 
 
-def send_mission_current():
-    client.mav.mission_current_send(
+async def send_mission_current():
+    await client.mav.mission_current_send(
         seq=0,
         total=65535,
         mission_state=0,
@@ -308,8 +309,8 @@ def send_mission_current():
 # fence_id ++	uint32_t	invalid:0	Id of current on-vehicle fence plan, or 0 if IDs are not supported or there is no fence loaded. GCS can use this to track changes to the fence plan type. The same value is returned on fence upload (in the MISSION_ACK).
 # rally_points_id ++	uint32_t	invalid:0	Id of current on-vehicle rally point plan, or 0 if IDs are not supported or there are no rally points loaded. GCS can use this to track changes to the rally point plan type. The same value is returned on rally point upload (in the MISSION_ACK).
 
-def send_named_value_float():
-    client.mav.named_value_float_send(
+async def send_named_value_float():
+    await client.mav.named_value_float_send(
         time_boot_ms=int(client.time_since('') * 1e3) % (MAX_UINT32 + 1),
         name=b"",
         value=0
@@ -321,8 +322,8 @@ def send_named_value_float():
 # value	float		Floating point value
 
 
-def send_nav_controller_output():
-    client.mav.nav_controller_output_send(
+async def send_nav_controller_output():
+    await client.mav.nav_controller_output_send(
         nav_roll=0,
         nav_pitch=0,
         nav_bearing=0,
@@ -345,8 +346,8 @@ def send_nav_controller_output():
 # xtrack_error	float	m	Current crosstrack error on x-y plane
 
 
-def send_power_status():
-    client.mav.power_status_send(
+async def send_power_status():
+    await client.mav.power_status_send(
         Vcc=0,
         Vservo=0,
         flags=0
@@ -377,8 +378,8 @@ def motor_control(rc1, rc2, rc3, rc4, rc5, rc6):
     # کانال ۶ برای lateral است (حرکت چپ و راست)
 
 
-def send_scaled_imu2():
-    client.mav.scaled_imu2_send(
+async def send_scaled_imu2():
+    await client.mav.scaled_imu2_send(
         time_boot_ms=int(client.time_since('') * 1e3) % (MAX_UINT32 + 1),
         xacc=0,
         yacc=0,
@@ -404,8 +405,8 @@ def send_scaled_imu2():
 # zmag	int16_t	mgauss	Z Magnetic field
 # temperature ++	int16_t	cdegC	Temperature, 0: IMU does not provide temperature values. If the IMU is at 0C it must send 1 (0.01C).
 
-def send_scaled_imu3():
-    client.mav.scaled_imu3_send(
+async def send_scaled_imu3():
+    await client.mav.scaled_imu3_send(
         time_boot_ms=int(client.time_since('') * 1e3) % (MAX_UINT32 + 1),
         xacc=0,
         yacc=0,
@@ -432,8 +433,8 @@ def send_scaled_imu3():
 # zmag	int16_t	mgauss	Z Magnetic field
 # temperature ++	int16_t	cdegC	Temperature, 0: IMU does not provide temperature values. If the IMU is at 0C it must send 1 (0.01C).
 
-def send_simstate():
-    client.mav.simstate_send(
+async def send_simstate():
+    await client.mav.simstate_send(
         roll=0,
         pitch=0,
         yaw=0,
@@ -460,13 +461,13 @@ def send_simstate():
 # lat	int32_t	degE7	Latitude.
 # lng	int32_t	degE7	Longitude.
 
-# def send_system_time():
+# async async def send_system_time():
 #     return {
 #         "time_unix_usec":None,
 #     }
 
-def send_sys_status():
-    client.mav.sys_status_send(
+async def send_sys_status():
+    await client.mav.sys_status_send(
         onboard_control_sensors_present=0,
         onboard_control_sensors_enabled=0,
         onboard_control_sensors_health=0,
@@ -502,8 +503,8 @@ def send_sys_status():
 # onboard_control_sensors_health_extended ++	uint32_t		MAV_SYS_STATUS_SENSOR_EXTENDED	Bitmap showing which onboard controllers and sensors have an error (or are operational). Value of 0: error. Value of 1: healthy.
 
 
-def send_terrain_report():
-    client.mav.terrain_report_send(
+async def send_terrain_report():
+    await client.mav.terrain_report_send(
         lat=0,
         lon=0,
         spacing=0,
@@ -515,8 +516,8 @@ def send_terrain_report():
     )
 
 
-def send_vfr_hud():
-    client.mav.vfr_hud_send(
+async def send_vfr_hud():
+    await client.mav.vfr_hud_send(
         airspeed=0,
         groundspeed=0,
         heading=0,
@@ -533,8 +534,8 @@ def send_vfr_hud():
 # alt	float	m	Current altitude (MSL).
 # climb	float	m/s	Current climb rate.
 
-def send_vibration():
-    client.mav.vibration_send(
+async def send_vibration():
+    await client.mav.vibration_send(
         time_usec=int(client.time_since('') * 1e6) % (MAX_UINT32 + 1),
         vibration_x=0,
         vibration_y=0,
@@ -554,8 +555,8 @@ def send_vibration():
 # clipping_2	uint32_t		third accelerometer clipping count
 
 
-def send_fence_status():
-    client.mav.fence_status_send(
+async def send_fence_status():
+    await client.mav.fence_status_send(
         breach_status=0,
         breach_count=0,
         breach_type=0,
@@ -582,8 +583,8 @@ def send_fence_status():
 # 2	FENCE_MITIGATE_VEL_LIMIT	Velocity limiting active to prevent breach
 # -------------------------------------------------------------
 
-def send_servo_output_raw():
-    client.mav.servo_output_raw_send(
+async def send_servo_output_raw():
+    await client.mav.servo_output_raw_send(
         time_usec=int(client.time_since('') * 1e6) % (MAX_UINT32 + 1),
         port=0,
         servo1_raw=0,
@@ -626,8 +627,8 @@ def send_servo_output_raw():
 # servo16_raw ++	uint16_t	us	Servo output 16 value
 
 
-def send_rc_channels():
-    client.mav.rc_channels_send(
+async def send_rc_channels():
+    await client.mav.rc_channels_send(
         time_boot_ms=int(client.time_since('') * 1e3) % (MAX_UINT32 + 1),
         chancount=0,
         chan1_raw=0,
@@ -676,8 +677,8 @@ def send_rc_channels():
 # rssi	uint8_t		Receive signal strength indicator in device-dependent units/scale. Values: [0-254], UINT8_MAX: invalid/unknown.
 
 
-def send_rc_channels_raw():
-    client.mav.rc_channels_raw_send(
+async def send_rc_channels_raw():
+    await client.mav.rc_channels_raw_send(
         time_boot_ms=int(client.time_since('') * 1e3) % (MAX_UINT32 + 1),
         port=0,
         chan1_raw=0,
@@ -705,8 +706,8 @@ def send_rc_channels_raw():
 # chan8_raw	uint16_t	us	RC channel 8 value.
 # rssi	uint8_t		Receive signal strength indicator in device-dependent units/scale. Values: [0-254], UINT8_MAX: invalid/unknown.
 
-def send_pid_tuning():
-    client.mav.pid_tuning_send(
+async def send_pid_tuning():
+    await client.mav.pid_tuning_send(
         axis=0,
         desired=0,
         achieved=0,
@@ -732,8 +733,8 @@ def send_pid_tuning():
 # PDmod ++	float		P/D oscillation modifier.
 
 
-def send_ahrs():
-    client.mav.ahrs_send(
+async def send_ahrs():
+    await client.mav.ahrs_send(
         omegaIx=0,
         omegaIy=0,
         omegaIz=0,
@@ -753,8 +754,8 @@ def send_ahrs():
 # error_rp	float		Average error_roll_pitch value.
 # error_yaw	float		Average error_yaw value.
 
-def send_system_time():
-    client.mav.system_time_send(
+async def send_system_time():
+    await client.mav.system_time_send(
         time_boot_ms=int(client.time_since('') * 1e3) % (MAX_UINT32 + 1),
         time_unix_usec=int(client.time_since('') * 1e6) % (MAX_UINT32 + 1)
 
@@ -765,8 +766,8 @@ def send_system_time():
 # time_boot_ms	uint32_t	ms	Timestamp (time since system boot).
 
 
-def send_rangefinder():
-    client.mav.rangefinder_send(
+async def send_rangefinder():
+    await client.mav.rangefinder_send(
         distance=0,
         voltage=0
     )
@@ -775,8 +776,8 @@ def send_rangefinder():
 # distance	float	m	Distance.
 # voltage	float	V	Raw voltage if available, zero otherwise.
 
-def send_distance_sensor():
-    client.mav.distance_sensor_send(
+async def send_distance_sensor():
+    await client.mav.distance_sensor_send(
         time_boot_ms=int(client.time_since('') * 1e3) % (MAX_UINT32 + 1),
         min_distance=0,
         max_distance=0,
@@ -857,8 +858,8 @@ def send_distance_sensor():
 # quaternion ++	float[4]		invalid:[0]	Quaternion of the sensor orientation in vehicle body frame (w, x, y, z order, zero-rotation is 1, 0, 0, 0). Zero-rotation is along the vehicle body x-axis. This field is required if the orientation is set to MAV_SENSOR_ROTATION_CUSTOM. Set it to 0 if invalid."
 # signal_quality ++	uint8_t	%	invalid:0	Signal quality of the sensor. Specific to each sensor type, representing the relation of the signal strength with the target reflectivity, distance, size or aspect, but normalised as a percentage. 0 = unknown/unset signal quality, 1 = invalid signal, 100 = perfect signal.
 
-def send_battery_status():
-    client.mav.battery_status_send(
+async def send_battery_status():
+    await client.mav.battery_status_send(
         id=0,
         battery_function=0,
         type=0,
@@ -931,8 +932,8 @@ def send_battery_status():
 # ------------------------------------------------------------------------------
 
 
-def send_gimbal_device_attitude_status():
-    client.mav.gimbal_device_attitude_status_send(
+async def send_gimbal_device_attitude_status():
+    await client.mav.gimbal_device_attitude_status_send(
         target_system=0,
         target_component=0,
         time_boot_ms=int(client.time_since('') * 1e3) % (MAX_UINT32 + 1),
@@ -987,8 +988,8 @@ def send_gimbal_device_attitude_status():
 # gimbal_device_id ++	uint8_t		invalid:0	This field is to be used if the gimbal manager and the gimbal device are the same component and hence have the same component ID. This field is then set a number between 1-6. If the component ID is separate, this field is not required and must be set to 0.
 
 
-def send_mag_cal_report():
-    client.mav.mag_cal_report_send(
+async def send_mag_cal_report():
+    await client.mav.mag_cal_report_send(
         compass_id=0,
         cal_mask=0,
         cal_status=0,
@@ -1085,8 +1086,8 @@ def send_mag_cal_report():
 # scale_factor ++	float			field radius correction factor
 
 
-def send_mag_cal_progress():
-    client.mav.mag_cal_progress_send(
+async def send_mag_cal_progress():
+    await client.mav.mag_cal_progress_send(
         compass_id=0,
         cal_mask=0,
         cal_status=0,
@@ -1111,8 +1112,8 @@ def send_mag_cal_progress():
 # direction_z	float			Body frame direction vector for display.
 
 
-def send_param_value():
-    client.mav.param_value_send(
+async def send_param_value():
+    await client.mav.param_value_send(
         param_id=b'',
         param_value=0,
         param_type=0,
@@ -1138,3 +1139,40 @@ def send_param_value():
 # -------------------------------------------------------------
 # param_count	uint16_t		Total number of onboard parameters
 # param_index	uint16_t		Index of this onboard parameter
+
+
+events: Dict[int, tuple[float, Callable]] = {
+    mavlink.MAVLINK_MSG_ID_AHRS: (1/16, send_ahrs),
+    mavlink.MAVLINK_MSG_ID_AHRS2: (1/16, send_ahrs2),
+    mavlink.MAVLINK_MSG_ID_ATTITUDE: (1/16, send_attitude),
+    mavlink.MAVLINK_MSG_ID_BATTERY_STATUS: (1/3, send_battery_status),
+    mavlink.MAVLINK_MSG_ID_DISTANCE_SENSOR: (1/3, send_distance_sensor),
+    mavlink.MAVLINK_MSG_ID_EKF_STATUS_REPORT: (1/3, send_ekf_status_report),
+    mavlink.MAVLINK_MSG_ID_FENCE_STATUS: (1/2, send_fence_status),
+    mavlink.MAVLINK_MSG_ID_GIMBAL_DEVICE_ATTITUDE_STATUS: (1/16, send_gimbal_device_attitude_status),
+    mavlink.MAVLINK_MSG_ID_GLOBAL_POSITION_INT: (1/3, send_global_position_int),
+    mavlink.MAVLINK_MSG_ID_GPS_RAW_INT: (1/2, send_gps_raw_int),
+    mavlink.MAVLINK_MSG_ID_HEARTBEAT: (1/1, send_heartbeat),
+    mavlink.MAVLINK_MSG_ID_MAG_CAL_PROGRESS: (1/3, send_mag_cal_progress),
+    mavlink.MAVLINK_MSG_ID_MAG_CAL_REPORT: (1/3, send_mag_cal_report),
+    mavlink.MAVLINK_MSG_ID_MEMINFO: (1/2, send_meminfo),
+    mavlink.MAVLINK_MSG_ID_NAV_CONTROLLER_OUTPUT: (1/2, send_nav_controller_output),
+    mavlink.MAVLINK_MSG_ID_PARAM_VALUE: (1/2, send_param_value),
+    mavlink.MAVLINK_MSG_ID_PID_TUNING: (1/10, send_pid_tuning),
+    mavlink.MAVLINK_MSG_ID_POWER_STATUS: (1/2, send_power_status),
+    mavlink.MAVLINK_MSG_ID_RANGEFINDER: (1/3, send_rangefinder),
+    mavlink.MAVLINK_MSG_ID_RAW_IMU: (1/2, send_raw_imu),
+    mavlink.MAVLINK_MSG_ID_RC_CHANNELS_RAW: (1/2, send_rc_channels_raw),
+    mavlink.MAVLINK_MSG_ID_RC_CHANNELS: (1/2, send_rc_channels),
+    mavlink.MAVLINK_MSG_ID_SCALED_IMU2: (1/2, send_scaled_imu2),
+    mavlink.MAVLINK_MSG_ID_SCALED_IMU3: (1/2, send_scaled_imu3),
+    mavlink.MAVLINK_MSG_ID_SCALED_PRESSURE: (1/2, send_scaled_pressure),
+    mavlink.MAVLINK_MSG_ID_SCALED_PRESSURE2: (1/2, send_scaled_pressure2),
+    mavlink.MAVLINK_MSG_ID_SCALED_PRESSURE3: (1/2, send_scaled_pressure3),
+    mavlink.MAVLINK_MSG_ID_SERVO_OUTPUT_RAW: (1/2, send_servo_output_raw),
+    mavlink.MAVLINK_MSG_ID_SIMSTATE: (1/10, send_simstate),
+    mavlink.MAVLINK_MSG_ID_SYS_STATUS: (1/2, send_sys_status),
+    mavlink.MAVLINK_MSG_ID_SYSTEM_TIME: (1/3, send_system_time),
+    mavlink.MAVLINK_MSG_ID_VFR_HUD: (1/16, send_vfr_hud),
+    mavlink.MAVLINK_MSG_ID_VIBRATION: (1/3, send_vibration),
+}

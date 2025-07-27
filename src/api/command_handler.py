@@ -1,4 +1,4 @@
-from .mav_client import mavlink, client
+from .mavlink import mavlink, client
 from robot_core import robot
 
 
@@ -122,3 +122,16 @@ def nav_waypoint(msg: mavlink.MAVLink_command_int_message):
 # msg.param5:Latitude
 # msg.param6:Longitude
 # msg.param7:Altitude
+
+
+handlers = {
+    mavlink.MAV_CMD_COMPONENT_ARM_DISARM: component_arm_disarm,
+    mavlink.MAV_CMD_DO_REPOSITION: do_reposition,
+    mavlink.MAV_CMD_DO_SET_HOME: do_set_home,
+    mavlink.MAV_CMD_MISSION_START: mission_start,
+    mavlink.MAV_CMD_NAV_TAKEOFF: nav_takeoff,
+    mavlink.MAV_CMD_NAV_WAYPOINT: nav_waypoint,
+    mavlink.MAV_CMD_REQUEST_MESSAGE: request_message,
+    mavlink.MAV_CMD_SET_CAMERA_FOCUS: set_camera_focus,
+    mavlink.MAV_CMD_SET_CAMERA_ZOOM: set_camera_zoom,
+}

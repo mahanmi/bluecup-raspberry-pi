@@ -1,4 +1,5 @@
-from .mav_client import mavlink, client
+from .mavlink import mavlink, client
+from robot_core import robot
 
 
 def set_camera_zoom(msg: mavlink.MAVLink_command_long_message):
@@ -38,6 +39,7 @@ def set_camera_focus(msg: mavlink.MAVLink_command_long_message):
 
 
 def component_arm_disarm(msg: mavlink.MAVLink_command_long_message):
+    robot.is_armed = msg.param1 != 0
     client.mav.command_ack_send(
         msg.command, mavlink.MAV_RESULT_ACCEPTED)
 
@@ -101,10 +103,8 @@ def request_message(msg: mavlink.MAVLink_command_long_message):
 # msg.param7:Target address for requested message (if message has target address fields). 0: Flight-stack default, 1: address of requester, 2: broadcast.	min: 0 max: 2 inc: 1
 
 
-def get_home_position(msg: mavlink.MAVLink_command_int_message):
-    client.mav.command_ack_send(
-        msg.command, mavlink.MAV_RESULT_ACCEPTED)
-    # This command is used to request the home position from the autopilot.
+# def get_home_position(msg: mavlink.MAVLink_command_int_message):
+#     pass
 
 
 def mission_start(msg: mavlink.MAVLink_command_long_message):
@@ -122,3 +122,16 @@ def nav_waypoint(msg: mavlink.MAVLink_command_int_message):
 # msg.param5:Latitude
 # msg.param6:Longitude
 # msg.param7:Altitude
+
+
+handlers = {
+    mavlink.MAV_CMD_COMPONENT_ARM_DISARM: component_arm_disarm,
+    mavlink.MAV_CMD_DO_REPOSITION: do_reposition,
+    mavlink.MAV_CMD_DO_SET_HOME: do_set_home,
+    mavlink.MAV_CMD_MISSION_START: mission_start,
+    mavlink.MAV_CMD_NAV_TAKEOFF: nav_takeoff,
+    mavlink.MAV_CMD_NAV_WAYPOINT: nav_waypoint,
+    mavlink.MAV_CMD_REQUEST_MESSAGE: request_message,
+    mavlink.MAV_CMD_SET_CAMERA_FOCUS: set_camera_focus,
+    mavlink.MAV_CMD_SET_CAMERA_ZOOM: set_camera_zoom,
+}
