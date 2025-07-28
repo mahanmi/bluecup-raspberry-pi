@@ -1,24 +1,18 @@
-from .mavlink import mavlink, client, VehicleModes
+from .mavlink import mavlink, client
 from typing import Dict, Callable
-from robot_core import robot
 import random
 
 MAX_UINT32 = 0xFFFFFFFF
 
 
 async def send_heartbeat():
-    base_mode = mavlink.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED | mavlink.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-    custom_mode = VehicleModes.MANUAL.value
-
-    if robot.is_armed:
-        base_mode |= mavlink.MAV_MODE_FLAG_SAFETY_ARMED
+    base_mode = mavlink.MAV_MODE_FLAG_SAFETY_ARMED | mavlink.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
 
     await client.mav.heartbeat_send(
         client.source_system,
         client.source_component,
         base_mode,
-        custom_mode,
-        0, 0
+        0, 0, 0
     )
 
 
@@ -255,6 +249,35 @@ async def send_global_position_int():
 # vy	int16_t	cm/s	Ground Y Speed (Longitude, positive east)
 # vz	int16_t	cm/s	Ground Z Speed (Altitude, positive down)
 # hdg	uint16_t	cdeg	Vehicle heading (yaw angle), 0.0..359.99 degrees. If unknown, set to: UINT16_MAX
+
+
+async def send_home_position():
+    await client.mav.home_position_send(
+        time_usec=int(client.time_since('') * 1e6) % (MAX_UINT32 + 1),
+        latitude=int(robot.lat*1e7),
+        longitude=int(robot.lon*1e7),
+        altitude=int(robot.alt*1e3),
+        x=0,
+        y=0,
+        z=0,
+        q=[0, 0, 0, 0],
+        approach_x=0,
+        approach_y=0,
+        approach_z=0
+    )
+
+
+# latitude	int32_t	degE7	Latitude (WGS84)
+# longitude	int32_t	degE7	Longitude (WGS84)
+# altitude	int32_t	mm	Altitude (MSL). Positive for up.
+# x	float	m	Local X position of this position in the local coordinate frame (NED)
+# y	float	m	Local Y position of this position in the local coordinate frame (NED)
+# z	float	m	Local Z position of this position in the local coordinate frame (NED: positive "down")
+# q	float[4]		Quaternion indicating world-to-surface-normal and heading transformation of the takeoff position. Used to indicate the heading and slope of the ground. All fields should be set to NaN if an accurate quaternion for both heading and surface slope cannot be supplied.
+# approach_x	float	m	Local X position of the end of the approach vector. Multicopters should set this position based on their takeoff path. Grass-landing fixed wing aircraft should set it the same way as multicopters. Runway-landing fixed wing aircraft should set it to the opposite direction of the takeoff, assuming the takeoff happened from the threshold / touchdown zone.
+# approach_y	float	m	Local Y position of the end of the approach vector. Multicopters should set this position based on their takeoff path. Grass-landing fixed wing aircraft should set it the same way as multicopters. Runway-landing fixed wing aircraft should set it to the opposite direction of the takeoff, assuming the takeoff happened from the threshold / touchdown zone.
+# approach_z	float	m	Local Z position of the end of the approach vector. Multicopters should set this position based on their takeoff path. Grass-landing fixed wing aircraft should set it the same way as multicopters. Runway-landing fixed wing aircraft should set it to the opposite direction of the takeoff, assuming the takeoff happened from the threshold / touchdown zone.
+# time_usec ++	uint64_t	us	Timestamp (UNIX Epoch time or time since system boot). The receiving end can infer timestamp format (since 1.1.1970 or since system boot) by checking for the magnitude of the number.
 
 
 async def send_local_position_ned():
@@ -1113,14 +1136,15 @@ async def send_mag_cal_progress():
 
 
 async def send_param_value():
-    await client.mav.param_value_send(
-        param_id=b'',
-        param_value=0,
-        param_type=0,
-        param_count=0,
-        param_index=0,
+    pass
+    # await client.mav.param_value_send(
+    #     param_id=b'',
+    #     param_value=0,
+    #     param_type=0,
+    #     param_count=0,
+    #     param_index=0,
 
-    )
+    # )
 
 # param_id	char[16]		Onboard parameter id, terminated by NULL if the length is less than 16 human-readable chars and WITHOUT null termination (NULL) byte if the length is exactly 16 chars - applications have to provide 16+1 bytes storage if the ID is stored as string
 # param_value	float		Onboard parameter value
