@@ -6,7 +6,7 @@ import copy
 
 def mode_string_v10(msg):
     '''mode string for 1.0 protocol, from heartbeat'''
-    return "Mode(%u)" % VehicleModes(msg.custom_mode).name
+    return f"Mode({VehicleModes(msg.custom_mode).name})"
 
 
 def add_message(messages, mtype, msg):

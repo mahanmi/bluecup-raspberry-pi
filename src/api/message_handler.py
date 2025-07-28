@@ -1,8 +1,12 @@
-from .mavlink import mavlink, client
 
-x = 0.0
-y = 0.0
-z = 0.0
+from .mavlink import mavlink, client
+from . import command_handler
+from robot_core import robot
+
+
+def command_recv_handler(msg: mavlink.MAVLink_command_long_message | mavlink.MAVLink_command_int_message):
+    if msg.command in command_handler.handlers:
+        command_handler.handlers[msg.command](msg)
 
 
 def command_ack_handler(msg: mavlink.MAVLink_command_ack_message):
@@ -11,16 +15,14 @@ def command_ack_handler(msg: mavlink.MAVLink_command_ack_message):
 
 def manual_control_handler(msg: mavlink.MAVLink_manual_control_message):
     global x, y, z
-    x = msg.x/10000
-    y = msg.y/10000
-    z = msg.z/10000
+    robot.lat += msg.x/10000
+    robot.lon += msg.y/10000
+    robot.alt += msg.z/10000
+    robot.yaw += msg.r/10000
+    print(robot.lat, robot.lon, robot.alt, robot.yaw)
 
 
 def heartbeat_handler(msg: mavlink.MAVLink_heartbeat_message):
-    pass
-
-
-def set_position_target_local_ned_handler(msg: mavlink.MAVLink_set_position_target_local_ned_message):
     pass
 
 
@@ -60,10 +62,12 @@ def param_set_handler(msg: mavlink.MAVLink_param_set_message):
 
 
 handlers = {
+    mavlink.MAVLINK_MSG_ID_COMMAND_LONG: command_recv_handler,
+    mavlink.MAVLINK_MSG_ID_COMMAND_INT: command_recv_handler,
     mavlink.MAVLINK_MSG_ID_COMMAND_ACK: command_ack_handler,
     mavlink.MAVLINK_MSG_ID_HEARTBEAT: heartbeat_handler,
     mavlink.MAVLINK_MSG_ID_MANUAL_CONTROL: manual_control_handler,
     mavlink.MAVLINK_MSG_ID_PARAM_REQUEST_LIST: param_request_list_handler,
+    mavlink.MAVLINK_MSG_ID_PARAM_REQUEST_READ: param_request_read_handler,
     mavlink.MAVLINK_MSG_ID_PARAM_SET: param_set_handler,
-    mavlink.MAVLINK_MSG_ID_SET_POSITION_TARGET_LOCAL_NED: set_position_target_local_ned_handler,
 }

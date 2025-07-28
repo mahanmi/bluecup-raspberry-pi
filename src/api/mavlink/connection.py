@@ -5,6 +5,12 @@ import socket
 import errno
 import time
 
+__all__ = [
+    'AsyncUdp',
+    'UDP_MAX_PACKET_LEN',
+    'MAX_UINT32',
+]
+
 # maximum packet length for a single receive call - use the UDP limit
 UDP_MAX_PACKET_LEN = 65535
 MAX_UINT32 = 0xFFFFFFFF
@@ -209,7 +215,7 @@ class AsyncUdp:
             self.mav_count += 1
 
         self.timestamp = msg._timestamp
-        if type == 'HEARTBEAT' and self.probably_vehicle_heartbeat(msg):
+        if type == 'HEARTBEAT':
             if self.sysid == 0:
                 # lock onto id tuple of first vehicle heartbeat
                 self.sysid = src_system
@@ -236,12 +242,6 @@ class AsyncUdp:
             if not src_tuple in self.param_state:
                 self.param_state[src_tuple] = param_state()
             self.param_state[src_tuple].params[msg.param_id] = msg.param_value
-        elif type == 'GPS_RAW':
-            if self.sysid_state[src_system].messages['HOME'].fix_type < 2:
-                self.sysid_state[src_system].messages['HOME'] = msg
-        elif type == 'GPS_RAW_INT':
-            if self.sysid_state[src_system].messages['HOME'].fix_type < 3:
-                self.sysid_state[src_system].messages['HOME'] = msg
 
         if (msg.get_signed() and
             self.mav.signing.link_id == 0 and
@@ -254,9 +254,6 @@ class AsyncUdp:
     async def recv_msg(self):
         '''message receive routine for UDP link'''
         s = await self.recv()
-        if len(s) > 0:
-            if self.first_byte:
-                self.auto_mavlink_version(s)
 
         m = self.mav.parse_char(s)
         if m is not None:

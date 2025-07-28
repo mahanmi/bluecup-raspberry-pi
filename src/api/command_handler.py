@@ -1,6 +1,8 @@
 from .mavlink import mavlink, client
 from robot_core import robot
 
+from typing import Dict, Callable, Any
+
 
 def set_camera_zoom(msg: mavlink.MAVLink_command_long_message):
     pass
@@ -126,7 +128,7 @@ def nav_waypoint(msg: mavlink.MAVLink_command_int_message):
 # msg.param7:Altitude
 
 
-handlers = {
+handlers: Dict[int, Callable] = {
     mavlink.MAV_CMD_COMPONENT_ARM_DISARM: component_arm_disarm,
     mavlink.MAV_CMD_DO_REPOSITION: do_reposition,
     mavlink.MAV_CMD_DO_SET_HOME: do_set_home,

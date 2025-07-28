@@ -3,7 +3,7 @@ import logging
 from hardware_interface import communication
 from hardware_interface import motors
 from hardware_interface import sensors
-from hardware_interface import camera
+# from hardware_interface import camera
 from hardware_interface import gnss
 from hardware_interface import servo
 from config import ROV_SERIAL_PORT, ROV_BAUD_RATE
@@ -21,9 +21,14 @@ logger.info("Initializing ROV...")
 
 # --- State Variables ---
 is_armed = False
+
+roll = 0.0
+pitch = 0.0
+yaw = 0.0
+
 lat = 31.839417
 lon = 54.358292
-alt = 10
+alt = 10.0
 # Target normalized (-1 to 1)
 current_target_movement = {
     "x": 0.0, "y": 0.0, "z": 0.0, "yaw": 0.0}

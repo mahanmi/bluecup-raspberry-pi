@@ -14,6 +14,8 @@ async def main():
         print("--- Program running. Press Ctrl+C to stop. ---")
         await asyncio.Future()
 
+    except asyncio.CancelledError:
+        print("\nAsyncio task was cancelled.")
     except KeyboardInterrupt:
         print("\nKeyboard interrupt received.")
     finally:

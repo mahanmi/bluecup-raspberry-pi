@@ -42,24 +42,23 @@ class AsyncMessageThread:
                 break  # Exit the loop to end the task.
 
     async def recv_msg_task(self):
-        while self.running:
-            msg = await client.recv_msg()
+        try:
+            while self.running:
+                msg = await client.recv_msg()
 
-            if not msg:
-                logging.warning("No message received")
-                continue
+                if not msg:
+                    logging.error("No message received")
+                    continue
 
-            if (msg.id == mavlink.MAVLINK_MSG_ID_COMMAND_INT or msg.id == mavlink.MAVLINK_MSG_ID_COMMAND_LONG):
-                if msg.command in command_handler.handlers:
-                    command_handler.handlers[msg.command](msg)
+                if msg.id in message_handler.handlers:
+                    message_handler.handlers[msg.id](msg)
                 else:
                     logging.warning(
-                        f"Unhandled command: {mavlink.enums['MAV_CMD'][msg.command].name} ({msg.param1}, {msg.param2})")
-            elif msg.id in message_handler.handlers:
-                message_handler.handlers[msg.id](msg)
-            else:
-                logging.warning(
-                    f"Unhandled message: {mavlink.enums[msg.id].name}")
+                        f"Unhandled message: {mavlink.enums[msg.id].name}")
+        except Exception as e:
+            import traceback
+            print(f"Error in recv_msg_task: {e}")
+            print(traceback.format_exc())
 
     async def start(self):
         """Start the message thread"""
