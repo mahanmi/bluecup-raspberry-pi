@@ -3,8 +3,6 @@ from typing import Dict, Callable
 from robot_core import robot
 import random
 
-MAX_UINT32 = 0xFFFFFFFF
-
 
 async def send_heartbeat():
     base_mode = mavlink.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED | mavlink.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
@@ -25,7 +23,7 @@ async def send_heartbeat():
 # MPU 6050 , ICM
 async def send_raw_imu():
     await client.mav.raw_imu_send(
-        time_usec=int(client.time_since('') * 1e6) % (MAX_UINT32 + 1),
+        time_usec=client.boot_time_usec(),
         xacc=0,
         yacc=0,
         zacc=0,
@@ -55,7 +53,7 @@ async def send_raw_imu():
 
 async def send_gps_raw_int():
     await client.mav.gps_raw_int_send(
-        time_usec=int(client.time_since('') * 1e6) % (MAX_UINT32 + 1),
+        time_usec=client.boot_time_usec(),
         fix_type=0,  # change this based on your gps state
         lat=int(robot.lat*1e7),
         lon=int(robot.lon*1e7),
@@ -105,7 +103,7 @@ async def send_gps_raw_int():
 
 async def send_scaled_pressure():
     await client.mav.scaled_pressure_send(
-        time_boot_ms=int(client.time_since('') * 1e3) % (MAX_UINT32 + 1),
+        time_boot_ms=client.boot_time_ms(),
         press_abs=0,
         press_diff=0,
         temperature=0,
@@ -122,7 +120,7 @@ async def send_scaled_pressure():
 
 async def send_scaled_pressure2():
     await client.mav.scaled_pressure2_send(
-        time_boot_ms=int(client.time_since('') * 1e3) % (MAX_UINT32 + 1),
+        time_boot_ms=client.boot_time_ms(),
         press_abs=0,
         press_diff=0,
         temperature=0,
@@ -139,7 +137,7 @@ async def send_scaled_pressure2():
 
 async def send_scaled_pressure3():
     await client.mav.scaled_pressure3_send(
-        time_boot_ms=int(client.time_since('') * 1e3) % (MAX_UINT32 + 1),
+        time_boot_ms=client.boot_time_ms(),
         press_abs=0,
         press_diff=0,
         temperature=0,
@@ -176,7 +174,7 @@ async def send_ahrs2():
 
 async def send_attitude():
     await client.mav.attitude_send(
-        time_boot_ms=int(client.time_since('') * 1e3) % (MAX_UINT32 + 1),
+        time_boot_ms=client.boot_time_ms(),
         roll=6.28318 * random.random() - 3.1415,  # Random roll angle in radians
         pitch=6.28318 * random.random() - 3.1415,  # Random pitch angle in radians
         yaw=6.28318 * random.random() - 3.1415,  # Random yaw angle in radians
@@ -234,7 +232,7 @@ async def send_ekf_status_report():
 
 async def send_global_position_int():
     await client.mav.global_position_int_send(
-        time_boot_ms=int(client.time_since('') * 1e3) % (MAX_UINT32 + 1),
+        time_boot_ms=client.boot_time_ms(),
         lat=int(robot.lat*1e7),
         lon=int(robot.lon*1e7),
         alt=int(robot.alt*1e3),
@@ -259,7 +257,7 @@ async def send_global_position_int():
 
 async def send_home_position():
     await client.mav.home_position_send(
-        time_usec=int(client.time_since('') * 1e6) % (MAX_UINT32 + 1),
+        time_usec=client.boot_time_usec(),
         latitude=int(robot.lat*1e7),
         longitude=int(robot.lon*1e7),
         altitude=int(robot.alt*1e3),
@@ -288,7 +286,7 @@ async def send_home_position():
 
 async def send_local_position_ned():
     await client.mav.local_position_ned_send(
-        time_boot_ms=int(client.time_since('') * 1e3) % (MAX_UINT32 + 1),
+        time_boot_ms=client.boot_time_ms(),
         x=0,
         y=0,
         z=0,
@@ -320,27 +318,9 @@ async def send_meminfo():
 # freemem32 ++	uint32_t	bytes	Free memory (32 bit).
 
 
-async def send_mission_current():
-    await client.mav.mission_current_send(
-        seq=0,
-        total=65535,
-        mission_state=0,
-        mission_mode=0,
-
-    )
-
-
-# seq	uint16_t		Sequence
-# total ++	uint16_t	invalid:UINT16_MAX	Total number of mission items on vehicle (on last item, sequence == total). If the autopilot stores its home location as part of the mission this will be excluded from the total. 0: Not supported, UINT16_MAX if no mission is present on the vehicle.
-# mission_state ++	uint8_t	invalid:0 MISSION_STATE	Mission state machine state. MISSION_STATE_UNKNOWN if state reporting not supported.
-# mission_mode ++	uint8_t	invalid:0	Vehicle is in a mode that can execute mission items or suspended. 0: Unknown, 1: In mission mode, 2: Suspended (not in mission mode).
-# mission_id ++	uint32_t	invalid:0	Id of current on-vehicle mission plan, or 0 if IDs are not supported or there is no mission loaded. GCS can use this to track changes to the mission plan type. The same value is returned on mission upload (in the MISSION_ACK).
-# fence_id ++	uint32_t	invalid:0	Id of current on-vehicle fence plan, or 0 if IDs are not supported or there is no fence loaded. GCS can use this to track changes to the fence plan type. The same value is returned on fence upload (in the MISSION_ACK).
-# rally_points_id ++	uint32_t	invalid:0	Id of current on-vehicle rally point plan, or 0 if IDs are not supported or there are no rally points loaded. GCS can use this to track changes to the rally point plan type. The same value is returned on rally point upload (in the MISSION_ACK).
-
 async def send_named_value_float():
     await client.mav.named_value_float_send(
-        time_boot_ms=int(client.time_since('') * 1e3) % (MAX_UINT32 + 1),
+        time_boot_ms=client.boot_time_ms(),
         name=b"",
         value=0
     )
@@ -396,20 +376,10 @@ async def send_power_status():
 # 32	MAV_POWER_STATUS_CHANGED	Power status has changed since boot
 # -------------------------------------------------------------------------------
 
-def motor_control(rc1, rc2, rc3, rc4, rc5, rc6):
-    pass
-    # هر کانال حاوی یک اینتیجر است که فرکانس سرعت را تعیین می‌کند
-    # کانال ۱ برای roll است
-    # کانال ۲ برای pitch است
-    # کانال ۳ برای throttle است
-    # کانال ۴ برای yaw است
-    # کانال ۵ برای forward است (حرکت رو به جلو و عقب)
-    # کانال ۶ برای lateral است (حرکت چپ و راست)
-
 
 async def send_scaled_imu2():
     await client.mav.scaled_imu2_send(
-        time_boot_ms=int(client.time_since('') * 1e3) % (MAX_UINT32 + 1),
+        time_boot_ms=client.boot_time_ms(),
         xacc=0,
         yacc=0,
         zacc=0,
@@ -436,7 +406,7 @@ async def send_scaled_imu2():
 
 async def send_scaled_imu3():
     await client.mav.scaled_imu3_send(
-        time_boot_ms=int(client.time_since('') * 1e3) % (MAX_UINT32 + 1),
+        time_boot_ms=client.boot_time_ms(),
         xacc=0,
         yacc=0,
         zacc=0,
@@ -462,38 +432,12 @@ async def send_scaled_imu3():
 # zmag	int16_t	mgauss	Z Magnetic field
 # temperature ++	int16_t	cdegC	Temperature, 0: IMU does not provide temperature values. If the IMU is at 0C it must send 1 (0.01C).
 
-async def send_simstate():
-    await client.mav.simstate_send(
-        roll=0,
-        pitch=0,
-        yaw=0,
-        xacc=0,
-        yacc=0,
-        zacc=0,
-        xgyro=0,
-        ygyro=0,
-        zgyro=0,
-        lat=0,
-        lng=0
-    )
-
-
-# roll	float	rad	Roll angle.
-# pitch	float	rad	Pitch angle.
-# yaw	float	rad	Yaw angle.
-# xacc	float	m/s/s	X acceleration.
-# yacc	float	m/s/s	Y acceleration.
-# zacc	float	m/s/s	Z acceleration.
-# xgyro	float	rad/s	Angular speed around X axis.
-# ygyro	float	rad/s	Angular speed around Y axis.
-# zgyro	float	rad/s	Angular speed around Z axis.
-# lat	int32_t	degE7	Latitude.
-# lng	int32_t	degE7	Longitude.
 
 # async async def send_system_time():
 #     return {
 #         "time_unix_usec":None,
 #     }
+
 
 async def send_sys_status():
     await client.mav.sys_status_send(
@@ -565,7 +509,7 @@ async def send_vfr_hud():
 
 async def send_vibration():
     await client.mav.vibration_send(
-        time_usec=int(client.time_since('') * 1e6) % (MAX_UINT32 + 1),
+        time_usec=client.boot_time_usec(),
         vibration_x=0,
         vibration_y=0,
         vibration_z=0,
@@ -614,7 +558,7 @@ async def send_fence_status():
 
 async def send_servo_output_raw():
     await client.mav.servo_output_raw_send(
-        time_usec=int(client.time_since('') * 1e6) % (MAX_UINT32 + 1),
+        time_usec=client.boot_time_usec(),
         port=0,
         servo1_raw=0,
         servo2_raw=0,
@@ -658,7 +602,7 @@ async def send_servo_output_raw():
 
 async def send_rc_channels():
     await client.mav.rc_channels_send(
-        time_boot_ms=int(client.time_since('') * 1e3) % (MAX_UINT32 + 1),
+        time_boot_ms=client.boot_time_ms(),
         chancount=0,
         chan1_raw=0,
         chan2_raw=0,
@@ -708,7 +652,7 @@ async def send_rc_channels():
 
 async def send_rc_channels_raw():
     await client.mav.rc_channels_raw_send(
-        time_boot_ms=int(client.time_since('') * 1e3) % (MAX_UINT32 + 1),
+        time_boot_ms=client.boot_time_ms(),
         port=0,
         chan1_raw=0,
         chan2_raw=0,
@@ -785,8 +729,8 @@ async def send_ahrs():
 
 async def send_system_time():
     await client.mav.system_time_send(
-        time_boot_ms=int(client.time_since('') * 1e3) % (MAX_UINT32 + 1),
-        time_unix_usec=int(client.time_since('') * 1e6) % (MAX_UINT32 + 1)
+        time_boot_ms=client.boot_time_ms(),
+        time_unix_usec=client.boot_time_usec()
 
     )
 
@@ -807,7 +751,7 @@ async def send_rangefinder():
 
 async def send_distance_sensor():
     await client.mav.distance_sensor_send(
-        time_boot_ms=int(client.time_since('') * 1e3) % (MAX_UINT32 + 1),
+        time_boot_ms=client.boot_time_ms(),
         min_distance=0,
         max_distance=0,
         current_distance=0,
@@ -965,7 +909,7 @@ async def send_gimbal_device_attitude_status():
     await client.mav.gimbal_device_attitude_status_send(
         target_system=0,
         target_component=0,
-        time_boot_ms=int(client.time_since('') * 1e3) % (MAX_UINT32 + 1),
+        time_boot_ms=client.boot_time_ms(),
         flags=0,
         q=[0, 0, 0, 0],
         angular_velocity_x=0,
@@ -1142,6 +1086,7 @@ async def send_mag_cal_progress():
 
 
 async def send_param_value():
+    pass
     # await client.mav.param_value_send(
     #     param_id=b'',
     #     param_value=0,
@@ -1151,23 +1096,23 @@ async def send_param_value():
 
     # )
 
-    # param_id	char[16]		Onboard parameter id, terminated by NULL if the length is less than 16 human-readable chars and WITHOUT null termination (NULL) byte if the length is exactly 16 chars - applications have to provide 16+1 bytes storage if the ID is stored as string
-    # param_value	float		Onboard parameter value
-    # param_type	uint8_t	MAV_PARAM_TYPE	Onboard parameter type.
-    # ------------------------------------------------------------
-    # 1	MAV_PARAM_TYPE_UINT8	8-bit unsigned integer
-    # 2	MAV_PARAM_TYPE_INT8	8-bit signed integer
-    # 3	MAV_PARAM_TYPE_UINT16	16-bit unsigned integer
-    # 4	MAV_PARAM_TYPE_INT16	16-bit signed integer
-    # 5	MAV_PARAM_TYPE_UINT32	32-bit unsigned integer
-    # 6	MAV_PARAM_TYPE_INT32	32-bit signed integer
-    # 7	MAV_PARAM_TYPE_UINT64	64-bit unsigned integer
-    # 8	MAV_PARAM_TYPE_INT64	64-bit signed integer
-    # 9	MAV_PARAM_TYPE_REAL32	32-bit floating-point
-    # 10	MAV_PARAM_TYPE_REAL64	64-bit floating-point
-    # -------------------------------------------------------------
-    # param_count	uint16_t		Total number of onboard parameters
-    # param_index	uint16_t		Index of this onboard parameter
+# param_id	char[16]		Onboard parameter id, terminated by NULL if the length is less than 16 human-readable chars and WITHOUT null termination (NULL) byte if the length is exactly 16 chars - applications have to provide 16+1 bytes storage if the ID is stored as string
+# param_value	float		Onboard parameter value
+# param_type	uint8_t	MAV_PARAM_TYPE	Onboard parameter type.
+# ------------------------------------------------------------
+# 1	MAV_PARAM_TYPE_UINT8	8-bit unsigned integer
+# 2	MAV_PARAM_TYPE_INT8	8-bit signed integer
+# 3	MAV_PARAM_TYPE_UINT16	16-bit unsigned integer
+# 4	MAV_PARAM_TYPE_INT16	16-bit signed integer
+# 5	MAV_PARAM_TYPE_UINT32	32-bit unsigned integer
+# 6	MAV_PARAM_TYPE_INT32	32-bit signed integer
+# 7	MAV_PARAM_TYPE_UINT64	64-bit unsigned integer
+# 8	MAV_PARAM_TYPE_INT64	64-bit signed integer
+# 9	MAV_PARAM_TYPE_REAL32	32-bit floating-point
+# 10	MAV_PARAM_TYPE_REAL64	64-bit floating-point
+# -------------------------------------------------------------
+# param_count	uint16_t		Total number of onboard parameters
+# param_index	uint16_t		Index of this onboard parameter
 
 
 events: Dict[int, tuple[float, Callable]] = {
@@ -1199,7 +1144,6 @@ events: Dict[int, tuple[float, Callable]] = {
     mavlink.MAVLINK_MSG_ID_SCALED_PRESSURE2: (1/2, send_scaled_pressure2),
     mavlink.MAVLINK_MSG_ID_SCALED_PRESSURE3: (1/2, send_scaled_pressure3),
     mavlink.MAVLINK_MSG_ID_SERVO_OUTPUT_RAW: (1/2, send_servo_output_raw),
-    mavlink.MAVLINK_MSG_ID_SIMSTATE: (1/10, send_simstate),
     mavlink.MAVLINK_MSG_ID_SYS_STATUS: (1/2, send_sys_status),
     mavlink.MAVLINK_MSG_ID_SYSTEM_TIME: (1/3, send_system_time),
     mavlink.MAVLINK_MSG_ID_VFR_HUD: (1/16, send_vfr_hud),

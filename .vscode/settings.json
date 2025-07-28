@@ -1,8 +1,5 @@
 {
   "autopep8.args": [
     "--exclude=\"ardupilotmega.py\""
-  ],
-  "files.readonlyInclude": {
-    "**/mavlink/**": true
-  }
+  ]
 }

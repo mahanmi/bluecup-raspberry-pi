@@ -1,4 +1,4 @@
-from . import mavlink, param_state
+from . import mavlink
 from .utils import *
 import asyncio
 import socket
@@ -7,6 +7,7 @@ import time
 
 # maximum packet length for a single receive call - use the UDP limit
 UDP_MAX_PACKET_LEN = 65535
+MAX_UINT32 = 0xFFFFFFFF
 
 
 class AsyncUdp:
@@ -109,6 +110,12 @@ class AsyncUdp:
     @property
     def messages(self):
         return getattr(self.sysid_state[self.sysid], 'messages')
+
+    def boot_time_usec(self):
+        return int(self.start_time * 1e6) % (MAX_UINT32 + 1)
+
+    def boot_time_ms(self):
+        return int(self.start_time * 1e3) % (MAX_UINT32 + 1)
 
     def close(self):
         self.port.close()

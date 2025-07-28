@@ -1,4 +1,4 @@
-from . import mavlink, param_state
+from . import mavlink
 from .utils import *
 import asyncio
 import socket
