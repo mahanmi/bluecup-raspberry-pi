@@ -51,7 +51,7 @@ class AsyncMessageThread:
                     continue
 
                 if msg.id in message_handler.handlers:
-                    message_handler.handlers[msg.id](msg)
+                    await message_handler.handlers[msg.id](msg)
                 else:
                     logging.warning(
                         f"Unhandled message: {mavlink.enums[msg.id].name}")

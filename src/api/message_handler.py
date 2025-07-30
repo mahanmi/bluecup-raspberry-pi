@@ -4,25 +4,25 @@ from . import command_handler
 from robot_core import robot
 
 
-def command_recv_handler(msg: mavlink.MAVLink_command_long_message | mavlink.MAVLink_command_int_message):
+async def command_recv_handler(msg: mavlink.MAVLink_command_long_message | mavlink.MAVLink_command_int_message):
     if msg.command in command_handler.handlers:
-        command_handler.handlers[msg.command](msg)
+        await command_handler.handlers[msg.command](msg)
 
 
-def command_ack_handler(msg: mavlink.MAVLink_command_ack_message):
+async def command_ack_handler(msg: mavlink.MAVLink_command_ack_message):
     pass
 
 
-def manual_control_handler(msg: mavlink.MAVLink_manual_control_message):
-    global x, y, z
-    robot.lat += msg.x/10000
-    robot.lon += msg.y/10000
-    robot.alt += msg.z/10000
-    robot.yaw += msg.r/10000
-    print(robot.lat, robot.lon, robot.alt, robot.yaw)
+async def manual_control_handler(msg: mavlink.MAVLink_manual_control_message):
+    # robot.lat += msg.x/10000
+    # robot.lon += msg.y/10000
+    # robot.alt += msg.z/10000
+    # robot.yaw += msg.r/10000
+    print(msg.x , msg.y , msg.z)
 
 
-def heartbeat_handler(msg: mavlink.MAVLink_heartbeat_message):
+
+async def heartbeat_handler(msg: mavlink.MAVLink_heartbeat_message):
     pass
 
 
@@ -38,7 +38,7 @@ params_index: dict[str, int] = {
 }
 
 
-def param_request_list_handler(msg: mavlink.MAVLink_param_request_list_message):
+async def param_request_list_handler(msg: mavlink.MAVLink_param_request_list_message):
     print(f"{msg.target_system} {msg.target_component} requested parameters")
     if msg.target_system != client.source_system or (msg.target_component != client.source_component and msg.target_component != mavlink.MAV_COMP_ID_ALL):
         return
@@ -47,17 +47,17 @@ def param_request_list_handler(msg: mavlink.MAVLink_param_request_list_message):
             param_id.encode(), value, mavlink.MAV_PARAM_TYPE_REAL32, len(params), params_index[param_id])
 
 
-def param_request_read_handler(msg: mavlink.MAVLink_param_request_read_message):
+async def param_request_read_handler(msg: mavlink.MAVLink_param_request_read_message):
     print(f"{msg.target_system} {msg.target_component} requested parameter {msg.param_id}")
     if msg.target_system != client.source_system or (msg.target_component != client.source_component and msg.target_component != mavlink.MAV_COMP_ID_ALL):
         return
     if msg.param_id in params:
         value = params[msg.param_id]
-        client.mav.param_value_send(
+        await client.mav.param_value_send(
             msg.param_id.encode(), value, mavlink.MAV_PARAM_TYPE_REAL32, len(params), params_index[msg.param_id])
 
 
-def param_set_handler(msg: mavlink.MAVLink_param_set_message):
+async def param_set_handler(msg: mavlink.MAVLink_param_set_message):
     pass
 
 
