@@ -2,7 +2,7 @@ import asyncio
 import logging
 
 from .mavlink import mavlink, client
-from . import message_handler, command_handler, message_builder
+from . import message_handler, message_builder
 
 
 logging.basicConfig()
@@ -47,14 +47,14 @@ class AsyncMessageThread:
                 msg = await client.recv_msg()
 
                 if not msg:
-                    logging.error("No message received")
+                    logging.warning("receiver returned no message.")
                     continue
 
                 if msg.id in message_handler.handlers:
-                    message_handler.handlers[msg.id](msg)
+                    asyncio.create_task(message_handler.handlers[msg.id](msg))
                 else:
                     logging.warning(
-                        f"Unhandled message: {mavlink.enums[msg.id].name}")
+                        f"Unhandled message: {mavlink.mavlink_map[msg.id].msgname if msg.id in mavlink.mavlink_map else 'Unknown'} (ID: {msg.id})")
         except Exception as e:
             import traceback
             print(f"Error in recv_msg_task: {e}")

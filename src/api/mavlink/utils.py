@@ -3,6 +3,15 @@ from . import mavlink
 from enum import Enum
 import copy
 
+__all__ = [
+    'mode_string_v10',
+    'add_message',
+    'set_close_on_exec',
+    'VehicleModes',
+    'mavfile_state',
+    'param_state'
+]
+
 
 def mode_string_v10(msg):
     '''mode string for 1.0 protocol, from heartbeat'''

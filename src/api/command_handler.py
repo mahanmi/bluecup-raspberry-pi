@@ -1,10 +1,10 @@
 from .mavlink import mavlink, client
 from robot_core import robot
 
-from typing import Dict, Callable, Any
+from typing import Dict, Callable
 
 
-def set_camera_zoom(msg: mavlink.MAVLink_command_long_message):
+async def set_camera_zoom(msg: mavlink.MAVLink_command_long_message):
     pass
 
 
@@ -21,7 +21,7 @@ def set_camera_zoom(msg: mavlink.MAVLink_command_long_message):
 # msg.param4:None
 
 
-def set_camera_focus(msg: mavlink.MAVLink_command_long_message):
+async def set_camera_focus(msg: mavlink.MAVLink_command_long_message):
     pass
 
 
@@ -40,9 +40,10 @@ def set_camera_focus(msg: mavlink.MAVLink_command_long_message):
 # msg.param4:None
 
 
-def component_arm_disarm(msg: mavlink.MAVLink_command_long_message):
+async def component_arm_disarm(msg: mavlink.MAVLink_command_long_message):
     robot.is_armed = msg.param1 != 0
-    client.mav.command_ack_send(
+    print("ARMING" if robot.is_armed else "DISARMING")
+    await client.mav.command_ack_send(
         msg.command, mavlink.MAV_RESULT_ACCEPTED)
 
 
@@ -52,7 +53,7 @@ def component_arm_disarm(msg: mavlink.MAVLink_command_long_message):
 # msg.param4:None
 
 
-def nav_takeoff(msg: mavlink.MAVLink_command_long_message):
+async def nav_takeoff(msg: mavlink.MAVLink_command_long_message):
     pass
 
 # msg.param1:(Pitch)	Minimum pitch (if airspeed sensor present), desired pitch without sensor	deg
@@ -64,7 +65,7 @@ def nav_takeoff(msg: mavlink.MAVLink_command_long_message):
 # msg.param7:Altitude
 
 
-def do_set_home(msg: mavlink.MAVLink_command_long_message):
+async def do_set_home(msg: mavlink.MAVLink_command_long_message):
     pass
 
 
@@ -77,7 +78,7 @@ def do_set_home(msg: mavlink.MAVLink_command_long_message):
 # msg.param7:Altitude
 
 
-def do_reposition(msg: mavlink.MAVLink_command_int_message):
+async def do_reposition(msg: mavlink.MAVLink_command_int_message):
     pass
 
 
@@ -93,7 +94,7 @@ def do_reposition(msg: mavlink.MAVLink_command_int_message):
 # msg.param6:Longitude
 # msg.param7:Altitude
 
-def request_message(msg: mavlink.MAVLink_command_long_message):
+async def request_message(msg: mavlink.MAVLink_command_long_message):
     pass
 
 # msg.param1:	The MAVLink message ID of the requested message.	min: 0 max: 16777215 inc: 1
@@ -105,19 +106,19 @@ def request_message(msg: mavlink.MAVLink_command_long_message):
 # msg.param7:Target address for requested message (if message has target address fields). 0: Flight-stack default, 1: address of requester, 2: broadcast.	min: 0 max: 2 inc: 1
 
 
-def get_home_position(msg: mavlink.MAVLink_command_int_message):
-    client.mav.command_ack_send(
+async def get_home_position(msg: mavlink.MAVLink_command_int_message):
+    await client.mav.command_ack_send(
         msg.command, mavlink.MAV_RESULT_ACCEPTED)
     # This command is used to request the home position from the autopilot.
 
 
-def mission_start(msg: mavlink.MAVLink_command_long_message):
+async def mission_start(msg: mavlink.MAVLink_command_long_message):
     pass
 # msg.param1: (First Item)	first_item: the first mission item to run	min: 0 inc: 1
 # msg.param2:last_item: the last mission item to run (after this item is run, the mission ends)	min: 0 inc: 1
 
 
-def nav_waypoint(msg: mavlink.MAVLink_command_int_message):
+async def nav_waypoint(msg: mavlink.MAVLink_command_int_message):
     pass
 # msg.param1:(Hold)	Hold time. (ignored by fixed wing, time to stay at waypoint for rotary wing)	min: 0	s
 # msg.param2:(Accept Radius)	Acceptance radius (if the sphere with this radius is hit, the waypoint counts as reached)	min: 0	m

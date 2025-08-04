@@ -679,20 +679,6 @@ async def send_rc_channels_raw():
 # chan8_raw	uint16_t	us	RC channel 8 value.
 # rssi	uint8_t		Receive signal strength indicator in device-dependent units/scale. Values: [0-254], UINT8_MAX: invalid/unknown.
 
-async def send_pid_tuning():
-    await client.mav.pid_tuning_send(
-        axis=0,
-        desired=0,
-        achieved=0,
-        FF=0,
-        P=0,
-        I=0,
-        D=0,
-        SRate=0,
-        PDmod=0
-
-    )
-
 
 # axis	uint8_t	PID_TUNING_AXIS	Axis.
 # Messages with same value are from the same source (instance).
@@ -1132,7 +1118,6 @@ events: Dict[int, tuple[float, Callable]] = {
     mavlink.MAVLINK_MSG_ID_MEMINFO: (1/2, send_meminfo),
     mavlink.MAVLINK_MSG_ID_NAV_CONTROLLER_OUTPUT: (1/2, send_nav_controller_output),
     mavlink.MAVLINK_MSG_ID_PARAM_VALUE: (1/2, send_param_value),
-    mavlink.MAVLINK_MSG_ID_PID_TUNING: (1/10, send_pid_tuning),
     mavlink.MAVLINK_MSG_ID_POWER_STATUS: (1/2, send_power_status),
     mavlink.MAVLINK_MSG_ID_RANGEFINDER: (1/3, send_rangefinder),
     mavlink.MAVLINK_MSG_ID_RAW_IMU: (1/2, send_raw_imu),
