@@ -1,4 +1,4 @@
-from src.api.mavlink import mavlink, client
+from .mavlink import mavlink, client
 from robot_core import robot
 
 from typing import Dict, Callable
