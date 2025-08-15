@@ -20,6 +20,7 @@ def connect():
     """
     Establishes the serial connection.
     """
+    global serial_connection
     try:
         serial_connection = serial.Serial(
             port, baudrate, timeout=timeout
