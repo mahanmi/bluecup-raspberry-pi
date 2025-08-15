@@ -3,9 +3,7 @@ import time
 import logging
 from config import ROV_SERIAL_PORT, ROV_BAUD_RATE, ROV_TIMEOUT, EOL
 
-# Configure logging
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 
 """
@@ -29,12 +27,12 @@ def connect():
         # Allow some time for the connection to establish
         time.sleep(2)
         if serial_connection.is_open:
-            logging.info(
+            logger.info(
                 f"Successfully connected to {port} at {baudrate} baud.")
         else:
-            logging.error(f"Failed to open serial port {port}.")
+            logger.error(f"Failed to open serial port {port}.")
     except serial.SerialException as e:
-        logging.error(f"Error connecting to serial port {port}: {e}")
+        logger.error(f"Error connecting to serial port {port}: {e}")
         serial_connection = None  # Ensure it's None if connection failed
 
 
@@ -45,9 +43,9 @@ def disconnect():
     if serial_connection and serial_connection.is_open:
         try:
             serial_connection.close()
-            logging.info(f"Disconnected from {port}.")
+            logger.info(f"Disconnected from {port}.")
         except Exception as e:
-            logging.error(f"Error disconnecting from {port}: {e}")
+            logger.error(f"Error disconnecting from {port}: {e}")
     serial_connection = None
 
 
@@ -60,10 +58,10 @@ def send_command(command_str):
         bool: True if the command was sent successfully, False otherwise.
     """
     if not is_connected():
-        logging.warning(
+        logger.warning(
             f"Not connected to {port}. Cannot send command: {command_str}")
         # Optionally, try to reconnect:
-        # logging.info("Attempting to reconnect...")
+        # logger.info("Attempting to reconnect...")
         # connect()
         # if not is_connected():
         #     return False
@@ -72,17 +70,17 @@ def send_command(command_str):
     try:
         full_command = command_str.encode('utf-8') + eol
         serial_connection.write(full_command)
-        logging.debug(
+        logger.debug(
             f"Sent to {port}: {full_command.decode('utf-8').strip()}")
         return True
     except serial.SerialTimeoutException:
-        logging.error(
+        logger.error(
             f"Timeout writing to {port} for command: {command_str}")
     except serial.SerialException as e:
-        logging.error(
+        logger.error(
             f"Serial error writing command '{command_str}' to {port}: {e}")
     except Exception as e:
-        logging.error(
+        logger.error(
             f"Unexpected error writing command '{command_str}' to {port}: {e}")
     return False
 
@@ -96,7 +94,7 @@ def read_line(timeout_override=None):
         str or None: The line read (without EOL), or None if timeout or error.
     """
     if not is_connected():
-        logging.warning(f"Not connected to {port}. Cannot read line.")
+        logger.warning(f"Not connected to {port}. Cannot read line.")
         return None
 
     original_timeout = serial_connection.timeout
@@ -108,16 +106,16 @@ def read_line(timeout_override=None):
         if line_bytes:
             decoded_line = line_bytes.decode(
                 'utf-8', errors='ignore').strip()
-            logging.debug(f"Read from {port}: {decoded_line}")
+            logger.debug(f"Read from {port}: {decoded_line}")
             return decoded_line
         else:
             # This can happen on timeout if no data is received
-            logging.debug(f"Read timeout or no data from {port}.")
+            logger.debug(f"Read timeout or no data from {port}.")
             return None
     except serial.SerialException as e:
-        logging.error(f"Serial error reading line from {port}: {e}")
+        logger.error(f"Serial error reading line from {port}: {e}")
     except Exception as e:
-        logging.error(
+        logger.error(
             f"Unexpected error reading line from {port}: {e}")
     finally:
         if timeout_override is not None:
@@ -134,24 +132,24 @@ def read_bytes(num_bytes):
         bytes or None: The bytes read, or None if timeout or error.
     """
     if not is_connected():
-        logging.warning(
+        logger.warning(
             f"Not connected to {port}. Cannot read bytes.")
         return None
     try:
         data_bytes = serial_connection.read(num_bytes)
         if data_bytes:
-            logging.debug(
+            logger.debug(
                 f"Read {len(data_bytes)} bytes from {port}.")
             return data_bytes
         else:
-            logging.debug(
+            logger.debug(
                 f"Read timeout or no data (expected {num_bytes} bytes) from {port}.")
             return None
     except serial.SerialException as e:
-        logging.error(
+        logger.error(
             f"Serial error reading {num_bytes} bytes from {port}: {e}")
     except Exception as e:
-        logging.error(
+        logger.error(
             f"Unexpected error reading {num_bytes} bytes from {port}: {e}")
     return None
 
@@ -160,14 +158,14 @@ def flush_input():
     """ Clears input buffer. """
     if is_connected():
         serial_connection.reset_input_buffer()
-        logging.debug(f"Input buffer flushed for {port}")
+        logger.debug(f"Input buffer flushed for {port}")
 
 
 def flush_output():
     """ Clears output buffer. """
     if is_connected():
         serial_connection.reset_output_buffer()
-        logging.debug(f"Output buffer flushed for {port}")
+        logger.debug(f"Output buffer flushed for {port}")
 
 
 def is_connected():

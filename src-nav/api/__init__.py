@@ -5,7 +5,8 @@ from .mavlink import mavlink, client
 from . import message_handler, command_handler, message_builder
 
 
-logging.basicConfig()
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s - %(levelname)s - %(name)s - %(message)s')
 logging.getLogger('api').setLevel(logging.INFO)
 
 

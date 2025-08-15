@@ -5,8 +5,7 @@ from .mavlink import mavlink, client
 from . import message_handler, message_builder
 
 
-logging.basicConfig()
-logging.getLogger('api').setLevel(logging.INFO)
+logger = logging.getLogger('api')
 
 
 class AsyncMessageThread:
@@ -23,7 +22,8 @@ class AsyncMessageThread:
         """
         import asyncio
         import time
-        print(f"STARTING -> Task '{task_id}' with {interval:.3f}s interval.")
+        logger.debug(
+            f"STARTING -> Task '{task_id}' with {interval:.3f}s interval.")
         while True:
             start_time = time.perf_counter()
 
@@ -38,7 +38,7 @@ class AsyncMessageThread:
                 await asyncio.sleep(sleep_for)
             except asyncio.CancelledError:
                 # This block executes when task.cancel() is called on this task.
-                print(f"CANCELLED -> Task '{task_id}'")
+                logger.debug(f"CANCELLED -> Task '{task_id}'")
                 break  # Exit the loop to end the task.
 
     async def recv_msg_task(self):
@@ -47,24 +47,22 @@ class AsyncMessageThread:
                 msg = await client.recv_msg()
 
                 if not msg:
-                    logging.warning("receiver returned no message.")
+                    logger.warning("receiver returned no message.")
                     continue
 
                 if msg.id in message_handler.handlers:
                     asyncio.create_task(message_handler.handlers[msg.id](msg))
                 else:
-                    logging.warning(
+                    logger.warning(
                         f"Unhandled message: {mavlink.mavlink_map[msg.id].msgname if msg.id in mavlink.mavlink_map else 'Unknown'} (ID: {msg.id})")
         except Exception as e:
-            import traceback
-            print(f"Error in recv_msg_task: {e}")
-            print(traceback.format_exc())
+            logger.exception(f"Error in recv_msg_task: {e}")
 
     async def start(self):
         """Start the message thread"""
-        logging.info("Starting message thread")
+        logger.info("Starting message thread")
         if self.running:
-            logging.warning("Message thread is already running")
+            logger.warning("Message thread is already running")
             return
 
         # Clear existing tasks to avoid duplicates
@@ -87,10 +85,10 @@ class AsyncMessageThread:
     def stop(self):
         """Stop the message thread by cancelling only its own tasks."""
         if not self.tasks:
-            logging.warning("No message thread tasks to stop.")
+            logger.warning("No message thread tasks to stop.")
             return
 
-        logging.info(f"Stopping {len(self.tasks)} message thread tasks...")
+        logger.info(f"Stopping {len(self.tasks)} message thread tasks...")
         self.running = False
 
         # Cancel only the tasks this class created
@@ -99,4 +97,4 @@ class AsyncMessageThread:
 
         # Clear the list
         self.tasks = []
-        logging.info("Message thread tasks cancelled.")
+        logger.info("Message thread tasks cancelled.")

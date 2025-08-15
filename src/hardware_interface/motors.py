@@ -1,6 +1,8 @@
 from . import communication
 import logging
 
+logger = logging.getLogger(__name__)
+
 
 def set_motor_speed(motor_id: int, speed: int) -> bool:
     """
@@ -19,17 +21,17 @@ def set_motor_speed(motor_id: int, speed: int) -> bool:
     command = f"M:{motor_id}:{speed}"
 
     if communication.send_command(command):
-        logging.info(f"Motor {motor_id} speed set to {speed}")
+        logger.info(f"Motor {motor_id} speed set to {speed}")
         # Optional: Wait for an acknowledgment if your hardware sends one
         # ack = communication.read_line(timeout_override=0.5)
         # if ack and "OK" in ack: # Or whatever your hardware returns
         #     return True
         # else:
-        #     logging.warning(f"No/invalid ACK for motor command: {command} -> {ack}")
+        #     logger.warning(f"No/invalid ACK for motor command: {command} -> {ack}")
         #     return False
         return True  # Assuming command sent is enough for now
     else:
-        logging.error(
+        logger.error(
             f"Failed to send command to set motor {motor_id} speed.")
         return False
 
@@ -50,10 +52,10 @@ def stop_all_motors() -> bool:
     # return success
 
     if communication.send_command(command):
-        logging.info("All motors commanded to stop.")
+        logger.info("All motors commanded to stop.")
         return True
     else:
-        logging.error("Failed to send stop all motors command.")
+        logger.error("Failed to send stop all motors command.")
         return False
 
 
@@ -73,12 +75,12 @@ def set_thruster_speeds(speeds: list[int]) -> bool:
     for i, speed_value in enumerate(speeds):
         if not set_motor_speed(motor_id=i, speed=speed_value):
             all_successful = False
-            logging.warning(f"Failed to set speed for thruster {i}")
+            logger.warning(f"Failed to set speed for thruster {i}")
 
     if all_successful:
-        logging.info(f"Thruster speeds set: {speeds}")
+        logger.info(f"Thruster speeds set: {speeds}")
     else:
-        logging.error(
+        logger.error(
             f"One or more thruster speed commands failed for speeds: {speeds}")
     return all_successful
 

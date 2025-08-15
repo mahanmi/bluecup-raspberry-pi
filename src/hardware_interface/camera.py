@@ -6,8 +6,6 @@ from config import CAMERA_ID_OR_PIPELINE
 Manages a camera (USB or CSI via GStreamer on Raspberry Pi) using OpenCV.
 """
 
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - %(levelname)s - %(name)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 # --- Example GStreamer Pipelines for Raspberry Pi CSI Cameras ---

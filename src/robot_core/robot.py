@@ -12,9 +12,6 @@ from . import control, telemetry
 #    The main class representing the ROV.
 #    Manages state, hardware interfaces, and high-level operations.
 
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - %(levelname)s - %(name)s - %(message)s')
-
 
 logger = logging.getLogger(__name__)
 logger.info("Initializing ROV...")
