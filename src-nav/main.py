@@ -1,5 +1,11 @@
 from api import AsyncMessageThread
 import asyncio
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 
 async def main():
@@ -15,14 +21,14 @@ async def main():
         await asyncio.Future()
 
     except KeyboardInterrupt:
-        print("\nKeyboard interrupt received.")
+        logger.debug("\nKeyboard interrupt received.")
     finally:
-        print("Shutting down...")
+        logger.info("Shutting down...")
         # Ensure a graceful shutdown by calling your stop method
         message_thread.stop()
         # Give a moment for cancellation messages to be processed
         await asyncio.sleep(0.1)
-        print("Shutdown complete.")
+        logger.info("Shutdown complete.")
 
 if __name__ == "__main__":
     asyncio.run(main())

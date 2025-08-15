@@ -1,9 +1,15 @@
+import logging
 from . import communication
+
+# Configure logging
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 
 def set_servo_angle(servo_id, angle):
     if not (0 <= angle <= 180):
-        print("Angle must be between 0 and 180 degrees.")
+        logger.error("Angle must be between 0 and 180 degrees.")
         return
 
     # **IMPORTANT**: Replace "M" and the command format with your hardware's protocol.
@@ -12,14 +18,10 @@ def set_servo_angle(servo_id, angle):
     # e.g., "S:1:-100" sets servo 1 to angle -100 (if servo support it)
     command = f"R:{servo_id}:{angle}"
 
-    # Send the command using the communication module
-    response = communication.send_command(command)
-
-    if response is not None:
-        print(
-            f"Servo {servo_id} set to {angle} degrees. Response: {response}")
+    if communication.send_command(command):
+        logger.info(f"Servo {servo_id} set to {angle} degrees.")
     else:
-        print(f"Failed to send command to servo {servo_id}")
+        logger.error(f"Failed to send command to servo {servo_id}")
 
 
 def camera_tilt(angle):
@@ -41,4 +43,4 @@ if __name__ == '__main__':
         finally:
             communication.disconnect()
     else:
-        print("Failed to connect to the serial port.")
+        logger.error("Failed to connect to the serial port.")
