@@ -125,10 +125,10 @@ def get_battery_voltage() -> float | None:
     """
     command = "S:BATT?"  # **IMPORTANT**: Replace with actual command
     response = _request_sensor_data(command)
-    # Example response: "BATT:12.35V"
-    if response and response.startswith("BATT:") and response.endswith("V"):
+    # Example response: "BATT:12.35"
+    if response and response.startswith("BATT:"):
         try:
-            voltage_str = response.replace("BATT:", "").replace("V", "")
+            voltage_str = response.replace("BATT:", "")
             voltage = float(voltage_str)
             logging.info(f"Battery voltage: {voltage}V")
             return voltage
