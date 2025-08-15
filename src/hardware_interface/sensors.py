@@ -1,8 +1,10 @@
 # hardware_interface/sensors.py
 from . import communication
 from config import ROV_SERIAL_PORT, ROV_BAUD_RATE
-import logging
 import time  # For potential delays or retries
+import log
+
+logger = log.getLogger(__name__)
 
 
 def _request_sensor_data(sensor_command: str, retries=2, delay=0.1) -> str | None:
@@ -22,15 +24,15 @@ def _request_sensor_data(sensor_command: str, retries=2, delay=0.1) -> str | Non
             if response:
                 return response
             else:
-                logging.warning(
+                logger.warning(
                     f"No response for sensor command '{sensor_command}' on attempt {attempt + 1}")
         else:
-            logging.warning(
+            logger.warning(
                 f"Failed to send sensor command '{sensor_command}' on attempt {attempt + 1}")
 
         if attempt < retries:
             time.sleep(delay)
-    logging.error(
+    logger.error(
         f"Failed to get response for '{sensor_command}' after {retries + 1} attempts.")
     return None
 
@@ -51,13 +53,13 @@ def get_temperature() -> float | None:
         try:
             temp_str = response.split(":")[1]
             temperature = float(temp_str)
-            logging.info(f"Temperature reading: {temperature}°C")
+            logger.info(f"Temperature reading: {temperature}°C")
             return temperature
         except (IndexError, ValueError) as e:
-            logging.error(
+            logger.error(
                 f"Error parsing temperature from response '{response}': {e}")
     else:
-        logging.warning(
+        logger.warning(
             f"Unexpected or no response for temperature: {response}")
     return None
 
@@ -77,13 +79,13 @@ def get_depth() -> float | None:
         try:
             depth_str = response.split(":")[1]
             depth = float(depth_str)
-            logging.info(f"Depth reading: {depth}m")
+            logger.info(f"Depth reading: {depth}m")
             return depth
         except (IndexError, ValueError) as e:
-            logging.error(
+            logger.error(
                 f"Error parsing depth from response '{response}': {e}")
     else:
-        logging.warning(f"Unexpected or no response for depth: {response}")
+        logger.warning(f"Unexpected or no response for depth: {response}")
     return None
 
 
@@ -107,13 +109,13 @@ def get_imu_data() -> dict | None:
             for part in parts:
                 key, value = part.split('=')
                 imu_data[key.lower()] = float(value)
-            logging.info(f"IMU data: {imu_data}")
+            logger.info(f"IMU data: {imu_data}")
             return imu_data
         except Exception as e:
-            logging.error(
+            logger.error(
                 f"Error parsing IMU data from response '{response}': {e}")
     else:
-        logging.warning(f"Unexpected or no response for IMU: {response}")
+        logger.warning(f"Unexpected or no response for IMU: {response}")
     return None
 
 
@@ -130,13 +132,13 @@ def get_battery_voltage() -> float | None:
         try:
             voltage_str = response.replace("BATT:", "")
             voltage = float(voltage_str)
-            logging.info(f"Battery voltage: {voltage}V")
+            logger.info(f"Battery voltage: {voltage}V")
             return voltage
         except ValueError as e:
-            logging.error(
+            logger.error(
                 f"Error parsing battery voltage from '{response}': {e}")
     else:
-        logging.warning(
+        logger.warning(
             f"Unexpected or no response for battery voltage: {response}")
     return None
 

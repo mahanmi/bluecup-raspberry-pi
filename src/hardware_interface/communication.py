@@ -1,9 +1,9 @@
 import serial
 import time
-import logging
+import log
 from config import ROV_SERIAL_PORT, ROV_BAUD_RATE, ROV_TIMEOUT, EOL
 
-logger = logging.getLogger(__name__)
+logger = log.getLogger(__name__)
 
 
 """

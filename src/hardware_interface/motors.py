@@ -1,7 +1,7 @@
 from . import communication
-import logging
+import log
 
-logger = logging.getLogger(__name__)
+logger = log.getLogger(__name__)
 
 
 def set_motor_speed(motor_id: int, speed: int) -> bool:

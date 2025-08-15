@@ -1,5 +1,5 @@
 # robot_core/control.py
-import logging
+import log
 import math
 
 # --- Thruster Configuration ---
@@ -16,7 +16,7 @@ import math
 THRUSTER_MAX_OUTPUT = 255
 
 
-logger = logging.getLogger(__name__)
+logger = log.getLogger(__name__)
 num_thrusters = 6
 # You might initialize PID controllers here if you plan to use them for stability.
 # e.g., depth_pid = PIDController(kp=..., ki=..., kd=...)

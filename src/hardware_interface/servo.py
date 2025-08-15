@@ -1,7 +1,7 @@
-import logging
+import log
 from . import communication
 
-logger = logging.getLogger(__name__)
+logger = log.getLogger(__name__)
 
 
 def set_servo_angle(servo_id, angle):

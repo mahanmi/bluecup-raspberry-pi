@@ -1,5 +1,5 @@
 import time
-import logging
+import log
 from hardware_interface import communication
 from hardware_interface import motors
 from hardware_interface import sensors
@@ -13,7 +13,7 @@ from . import control, telemetry
 #    Manages state, hardware interfaces, and high-level operations.
 
 
-logger = logging.getLogger(__name__)
+logger = log.getLogger(__name__)
 logger.info("Initializing ROV...")
 
 # --- State Variables ---
@@ -33,8 +33,8 @@ current_thruster_outputs: list[float] = []  # Actual values sent to thrusters
 telemetry_data = {
     "depth": 0.0,
     "temperature": 0.0,
-    "imu": None,  # e.g., {'ax': 0, 'ay': 0, 'az': 0, ...}
-    "battery_voltage": None,
+    "imu": {},  # e.g., {'ax': 0, 'ay': 0, 'az': 0, ...}
+    "battery_voltage": 0.0,
     "camera_pan": 0,
     "camera_tilt": 0,
 }
@@ -120,7 +120,7 @@ def update_telemetry(force_update=False):
     Args:
         force_update (bool): If True, updates regardless of time since last update.
     """
-    global telemetry_data
+    global telemetry_data, last_telemetry_update
     if not communication.is_connected():
         logger.warning("Cannot update telemetry: ROV not connected.")
         # Potentially clear or mark telemetry as stale
@@ -133,8 +133,8 @@ def update_telemetry(force_update=False):
 
     # Limit update frequency unless forced
     now = time.time()
-    # Update at most ~2Hz
-    if not force_update and (now - last_telemetry_update < 0.5):
+    # Update at most ~20Hz
+    if not force_update and (now - last_telemetry_update < 0.05):
         return
 
     logger.debug("Updating telemetry...")
@@ -204,6 +204,26 @@ def shutdown():
     # if hasattr('camera_video') and camera_video.isOpened():
     #     camera_video.release()
     logger.info("ROV Shutdown complete.")
+
+
+def start():
+    """Starts the ROV control loop."""
+    global roll, pitch, yaw
+
+    logger.info("Starting ROV...")
+
+    while True:
+        time.sleep(0.1)
+        update_telemetry()
+        state = get_current_state()
+        imu = state['telemetry'].get("imu", {}) or {}
+        if imu is None:
+            continue
+        print(imu)
+        roll, pitch, yaw = imu.get("gx", 0), imu.get("gy", 0), imu.get("gz", 0)
+        roll = roll / 180 * 3.1415
+        pitch = pitch / 180 * 3.1415
+        yaw = yaw / 180 * 3.1415
 
 
 # Example usage (for testing this module in isolation)

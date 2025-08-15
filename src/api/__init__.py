@@ -1,11 +1,11 @@
 import asyncio
-import logging
+import log
 
 from .mavlink import mavlink, client
 from . import message_handler, message_builder
 
 
-logger = logging.getLogger('api')
+logger = log.getLogger('api')
 
 
 class AsyncMessageThread:

@@ -7,7 +7,7 @@ Note: this file has been auto-generated. DO NOT EDIT
 """
 import hashlib
 import json
-import logging
+import log
 import os
 import struct
 import asyncio
@@ -27,7 +27,7 @@ MAVLINK_SIGNATURE_BLOCK_LEN = 13
 
 MAVLINK_IFLAG_SIGNED = 0x01
 
-logger = logging.getLogger(__name__)
+logger = log.getLogger(__name__)
 
 # allow MAV_IGNORE_CRC=1 to ignore CRC, allowing some
 # corrupted msgs to be seen

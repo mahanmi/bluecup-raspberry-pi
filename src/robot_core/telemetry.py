@@ -1,62 +1,72 @@
-from typing import Any
-import logging
-# Assuming this is where get_temp etc. are
-from hardware_interface import sensors
+from typing import Any, Dict
+from hardware_interface import communication
+import time
+import log
 
-
-logger = logging.getLogger(__name__)
+logger = log.getLogger(__name__)
 logger.info("TelemetryCollector initialized.")
 
 
-def collect_all_data() -> dict:
-    """
-    Collects data from all available sensors.
-    Returns:
-        dict: A dictionary containing all collected telemetry data.
-                Keys are sensor names (e.g., "temperature", "depth"),
-                values are the readings or None if unavailable.
-    """
-    if not sensors or not sensors.communication.is_connected():
+def collect_all_data(timeout=0.1, max_messages=10) -> dict:
+    """Parses a raw sensor message and updates the global state dictionary."""
+    start_time = time.monotonic()
+    received_messages = 0
+    _last_sensor_data: Dict[str, Any] = {
+        'temperature': None,
+        'depth': None,
+        'imu': None,
+        'battery': None,
+        'rangefinder': None,
+    }
+
+    if not communication.is_connected():
         logger.warning(
             "Cannot collect telemetry: Sensor interface not available or not connected.")
-        return {
-            "temperature": None,
-            "depth": None,
-            "imu": None,
-            "battery_voltage": None,
-            # Add other expected telemetry fields with None
-        }
+        return _last_sensor_data
 
-    data: dict[str, Any] = {}
-    try:
-        data["temperature"] = sensors.get_temperature()
-    except Exception as e:
-        logger.error(f"Error getting temperature: {e}")
-        data["temperature"] = None
+    while time.monotonic() - start_time < timeout and received_messages < max_messages:
+        message = communication.read_line(timeout_override=0.01)
 
-    try:
-        data["depth"] = sensors.get_depth()
-    except Exception as e:
-        logger.error(f"Error getting depth: {e}")
-        data["depth"] = None
+        if not message:
+            break  # No more messages
+        received_messages += 1
 
-    try:
-        data["imu"] = sensors.get_imu_data()  # Returns a dict or None
-    except Exception as e:
-        logger.error(f"Error getting IMU data: {e}")
-        data["imu"] = None
+        try:
+            prefix, payload = message.split(":", 1)
 
-    try:
-        data["battery_voltage"] = sensors.get_battery_voltage()
-    except Exception as e:
-        logger.error(f"Error getting battery voltage: {e}")
-        data["battery_voltage"] = None
+            if prefix == "TEMP":
+                _last_sensor_data['temperature'] = float(payload)
+                logger.debug(
+                    f"Updated temperature: {_last_sensor_data['temperature']}°C")
+            elif prefix == "DEPTH":
+                _last_sensor_data['depth'] = float(payload)
+                logger.debug(f"Updated depth: {_last_sensor_data['depth']}m")
+            elif prefix == "BATT":
+                _last_sensor_data['battery'] = float(payload)
+                logger.debug(
+                    f"Updated battery: {_last_sensor_data['battery']}V")
+            elif prefix == "IMU":
+                logger.debug(payload)
+                imu_data = {}
+                parts = payload.split(',')
+                for part in parts:
+                    key, value = part.split('=')
+                    imu_data[key.lower()] = float(value)
+                _last_sensor_data['imu'] = imu_data
+                logger.debug(f"Updated IMU data: {imu_data}")
+            elif prefix == "rf":
+                _last_sensor_data['rangefinder'] = float(payload)
+                logger.debug(
+                    f"Updated rangefinder: {_last_sensor_data['rangefinder']}m")
+            else:
+                logger.warning(
+                    f"Received message with unknown prefix: {prefix}")
+                communication.flush_input()
 
-    # You can add more specific sensor readings here
-    # e.g., data["leak_detected"] = sensors.get_leak_status()
+        except (ValueError, IndexError) as e:
+            logger.error(f"Error parsing message '{message}': {e}")
 
-    logger.debug(f"Telemetry data collected: {data}")
-    return data
+    return _last_sensor_data
 
 
 # Example Usage (requires a mock or real SensorInterface and SerialCommunicator)

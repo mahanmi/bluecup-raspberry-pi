@@ -1,10 +1,10 @@
 from typing import Callable, Any
-import logging
+import log
 # Assuming Robot class is defined in robot.py within the same package
 from . import robot  # Use relative import
 
 
-logger = logging.getLogger(__name__)
+logger = log.getLogger(__name__)
 logger.info("CommandProcessor initialized.")
 
 
