@@ -321,7 +321,47 @@ async def send_meminfo():
 async def send_named_value_float():
     await client.mav.named_value_float_send(
         time_boot_ms=client.boot_time_ms(),
-        name=b"",
+        name=b"CamTilt",
+        value=0
+    )
+    await client.mav.named_value_float_send(
+        time_boot_ms=client.boot_time_ms(),
+        name=b"CamPan",
+        value=0
+    )
+    await client.mav.named_value_float_send(
+        time_boot_ms=client.boot_time_ms(),
+        name=b"TetherTrn",
+        value=0
+    )
+    await client.mav.named_value_float_send(
+        time_boot_ms=client.boot_time_ms(),
+        name=b"Lights1",
+        value=0
+    )
+    await client.mav.named_value_float_send(
+        time_boot_ms=client.boot_time_ms(),
+        name=b"Lights2",
+        value=0
+    )
+    await client.mav.named_value_float_send(
+        time_boot_ms=client.boot_time_ms(),
+        name=b"PilotGain",
+        value=0
+    )
+    await client.mav.named_value_float_send(
+        time_boot_ms=client.boot_time_ms(),
+        name=b"InputHold",
+        value=0
+    )
+    await client.mav.named_value_float_send(
+        time_boot_ms=client.boot_time_ms(),
+        name=b"RollPitch",
+        value=0
+    )
+    await client.mav.named_value_float_send(
+        time_boot_ms=client.boot_time_ms(),
+        name=b"RFTarget",
         value=0
     )
 
