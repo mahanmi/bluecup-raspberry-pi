@@ -96,6 +96,7 @@ def set_movement_targets(x: float, y: float, z: float, yaw: float):
         z (float): Up/down thrust (-1.0 to 1.0).
         yaw (float): Rotational thrust (-1.0 to 1.0 for turn rate or torque).
     """
+    global current_target_movement
     current_target_movement = {"x": x, "y": y, "z": z, "yaw": yaw}
     logger.debug(
         f"Movement targets set: {current_target_movement}")
@@ -213,13 +214,12 @@ def start():
     logger.info("Starting ROV...")
 
     while True:
-        time.sleep(0.1)
+        time.sleep(0.05)
         update_telemetry()
         state = get_current_state()
         imu = state['telemetry'].get("imu", {}) or {}
         if imu is None:
             continue
-        print(imu)
         roll, pitch, yaw = imu.get("gx", 0), imu.get("gy", 0), imu.get("gz", 0)
         roll = roll / 180 * 3.1415
         pitch = pitch / 180 * 3.1415

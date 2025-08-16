@@ -156,7 +156,7 @@ async def send_ahrs2():
         roll=0,
         pitch=0,
         yaw=0,
-        altitude=0,
+        altitude=-robot.telemetry_data['depth'],
         lat=0,
         lng=0
 
@@ -485,7 +485,7 @@ async def send_sys_status():
         onboard_control_sensors_enabled=0,
         onboard_control_sensors_health=0,
         load=0,
-        voltage_battery=0,
+        voltage_battery=21000,
         current_battery=-1,
         battery_remaining=-1,
         drop_rate_comm=0,
