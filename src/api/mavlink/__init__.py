@@ -6,6 +6,7 @@ from config import *
 
 __all__ = [
     'VehicleModes',
+    'ButtonFunctions',
     'mavlink',
     'client',
 ]

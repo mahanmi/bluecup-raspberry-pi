@@ -1,9 +1,10 @@
 
-from .mavlink import mavlink, client
+from .mavlink import mavlink, client, ButtonFunctions
 from . import command_handler
 from robot_core import robot
 
 K_MODE_MANUAL = 0b0000000000000010
+
 
 async def command_recv_handler(msg: mavlink.MAVLink_command_long_message | mavlink.MAVLink_command_int_message):
     if msg.command in command_handler.handlers:
@@ -53,20 +54,18 @@ async def param_set_handler(msg: mavlink.MAVLink_param_set_message):
             await client.mav.param_value_send(**param, param_count=len(parameters), param_index=index)
             break
     else:
-        new_object = {'param_id': msg.param_id.encode(), 'param_value': msg.param_value, 'param_type': msg.param_type}
+        new_object = {'param_id': msg.param_id.encode(
+        ), 'param_value': msg.param_value, 'param_type': msg.param_type}
         parameters.append(new_object)
         await client.mav.param_value_send(**new_object, param_count=len(parameters), parama_index=len(parameters)-1)
 
 
 async def mission_request_int_handler(msg: mavlink.MAVLink_mission_request_int_message):
-    await client.mav.mission_count_send(target_system=255,target_component=240,count=0,mission_type=0)
-
+    await client.mav.mission_count_send(target_system=255, target_component=240, count=0, mission_type=0)
 
 
 async def dc(msg: mavlink.MAVLink_message):
     pass
-
-
 
 
 handlers = {
@@ -84,37 +83,48 @@ handlers = {
 }
 
 
-parameters=[
-    {"param_id": b"BTN0_FUNCTION", "param_value": 1, "param_type": 2},
-    {"param_id": b"BTN0_SFUNCTION", "param_value": 1, "param_type": 2},
-    {"param_id": b"BTN1_FUNCTION", "param_value": 6, "param_type": 2},
-    {"param_id": b"BTN1_SFUNCTION", "param_value": 12, "param_type": 2},
-    {"param_id": b"BTN2_FUNCTION", "param_value": 7, "param_type": 2},
-    {"param_id": b"BTN2_SFUNCTION", "param_value": 63, "param_type": 2},
-    {"param_id": b"BTN3_FUNCTION", "param_value": 6, "param_type": 2},
-    {"param_id": b"BTN3_SFUNCTION", "param_value": 64, "param_type": 2},
-    {"param_id": b"BTN4_FUNCTION", "param_value": 4, "param_type": 2},
-    {"param_id": b"BTN4_SFUNCTION", "param_value": 53, "param_type": 2},
-    {"param_id": b"BTN5_FUNCTION", "param_value": 2, "param_type": 2},
-    {"param_id": b"BTN5_SFUNCTION", "param_value": 8, "param_type": 2},
-    {"param_id": b"BTN6_FUNCTION", "param_value": 3, "param_type": 2},
-    {"param_id": b"BTN6_SFUNCTION", "param_value": 0, "param_type": 2},
-    {"param_id": b"BTN7_FUNCTION", "param_value": 21, "param_type": 2},
-    {"param_id": b"BTN7_SFUNCTION", "param_value": 0, "param_type": 2},
-    {"param_id": b"BTN8_FUNCTION", "param_value": 48, "param_type": 2},
-    {"param_id": b"BTN8_SFUNCTION", "param_value": 0, "param_type": 2},
-    {"param_id": b"BTN9_FUNCTION", "param_value": 23, "param_type": 2},
-    {"param_id": b"BTN9_SFUNCTION", "param_value": 27, "param_type": 2},
-    {"param_id": b"BTN10_FUNCTION", "param_value": 22, "param_type": 2},
-    {"param_id": b"BTN10_SFUNCTION", "param_value": 26, "param_type": 2},
-    {"param_id": b"BTN11_FUNCTION", "param_value": 42, "param_type": 2},
-    {"param_id": b"BTN11_SFUNCTION", "param_value": 47, "param_type": 2},
-    {"param_id": b"BTN12_FUNCTION", "param_value": 43, "param_type": 2},
-    {"param_id": b"BTN12_SFUNCTION", "param_value": 46, "param_type": 2},
-    {"param_id": b"BTN13_FUNCTION", "param_value": 33, "param_type": 2},
-    {"param_id": b"BTN13_SFUNCTION", "param_value": 45, "param_type": 2},
-    {"param_id": b"BTN14_FUNCTION", "param_value": 32, "param_type": 2},
-    {"param_id": b"BTN14_SFUNCTION", "param_value": 44, "param_type": 2},
-    {"param_id": b"BTN15_FUNCTION", "param_value": 0, "param_type": 2},
-    {"param_id": b"BTN15_SFUNCTION", "param_value": 0, "param_type": 2},
+def btn_functions(id: int, normal_function: ButtonFunctions, shift_function: ButtonFunctions):
+    return [
+        {"param_id": f"BTN{id}_FUNCTION".encode(
+        ), "param_value": normal_function.value, "param_type": 2},
+        {"param_id": f"BTN{id}_SFUNCTION".encode(
+        ), "param_value": shift_function.value, "param_type": 2},
+    ]
+
+
+# fmt: off
+parameters = [
+    *btn_functions(0, ButtonFunctions.Shift, ButtonFunctions.Shift),
+    *btn_functions(1, ButtonFunctions.ModeManual, ButtonFunctions.KNone),
+    *btn_functions(2, ButtonFunctions.ModeDepthHold, ButtonFunctions.ModePoshold),
+    *btn_functions(3, ButtonFunctions.ModeStabilize, ButtonFunctions.ModeAcro),
+    *btn_functions(4, ButtonFunctions.KNone, ButtonFunctions.KNone),
+    *btn_functions(5, ButtonFunctions.KNone, ButtonFunctions.KNone),
+    *btn_functions(6, ButtonFunctions.MountTiltDown, ButtonFunctions.Servo1Min),
+    *btn_functions(7, ButtonFunctions.MountTiltUp, ButtonFunctions.Servo1Max),
+    *btn_functions(8, ButtonFunctions.Disarm, ButtonFunctions.KNone),
+    *btn_functions(9, ButtonFunctions.Arm, ButtonFunctions.KNone),
+    *btn_functions(10, ButtonFunctions.MountCenter, ButtonFunctions.Relay1Toggle),
+    *btn_functions(11, ButtonFunctions.InputHoldSet, ButtonFunctions.KNone),
+    *btn_functions(12, ButtonFunctions.GainInc, ButtonFunctions.TrimPitchInc),
+    *btn_functions(13, ButtonFunctions.GainDec, ButtonFunctions.TrimPitchDec),
+    *btn_functions(14, ButtonFunctions.Lights1Dimmer, ButtonFunctions.TrimRollDec),
+    *btn_functions(15, ButtonFunctions.Lights1Brighter, ButtonFunctions.TrimRollInc),
+    *btn_functions(16, ButtonFunctions.KNone, ButtonFunctions.KNone),
+    *btn_functions(17, ButtonFunctions.KNone, ButtonFunctions.KNone),
+    *btn_functions(18, ButtonFunctions.KNone, ButtonFunctions.KNone),
+    *btn_functions(19, ButtonFunctions.KNone, ButtonFunctions.KNone),
+    *btn_functions(20, ButtonFunctions.KNone, ButtonFunctions.KNone),
+    *btn_functions(21, ButtonFunctions.KNone, ButtonFunctions.KNone),
+    *btn_functions(22, ButtonFunctions.KNone, ButtonFunctions.KNone),
+    *btn_functions(23, ButtonFunctions.KNone, ButtonFunctions.KNone),
+    *btn_functions(24, ButtonFunctions.KNone, ButtonFunctions.KNone),
+    *btn_functions(25, ButtonFunctions.KNone, ButtonFunctions.KNone),
+    *btn_functions(26, ButtonFunctions.KNone, ButtonFunctions.KNone),
+    *btn_functions(27, ButtonFunctions.KNone, ButtonFunctions.KNone),
+    *btn_functions(28, ButtonFunctions.KNone, ButtonFunctions.KNone),
+    *btn_functions(29, ButtonFunctions.KNone, ButtonFunctions.KNone),
+    *btn_functions(30, ButtonFunctions.KNone, ButtonFunctions.KNone),
+    *btn_functions(31, ButtonFunctions.KNone, ButtonFunctions.KNone),
 ]
+# fmt: on
