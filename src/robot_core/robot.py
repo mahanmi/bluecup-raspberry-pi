@@ -212,18 +212,23 @@ def start():
     global roll, pitch, yaw
 
     logger.info("Starting ROV...")
+    communication.connect()
 
-    while True:
-        time.sleep(0.05)
-        update_telemetry()
-        state = get_current_state()
-        imu = state['telemetry'].get("imu", {}) or {}
-        if imu is None:
-            continue
-        roll, pitch, yaw = imu.get("gx", 0), imu.get("gy", 0), imu.get("gz", 0)
-        roll = roll / 180 * 3.1415
-        pitch = pitch / 180 * 3.1415
-        yaw = yaw / 180 * 3.1415
+    try:
+        while True:
+            time.sleep(0.05)
+            update_telemetry()
+            state = get_current_state()
+            imu = state['telemetry'].get("imu", {}) or {}
+            if imu is None:
+                continue
+            roll, pitch, yaw = imu.get("gx", 0), imu.get(
+                "gy", 0), imu.get("gz", 0)
+            roll = roll / 180 * 3.1415
+            pitch = pitch / 180 * 3.1415
+            yaw = yaw / 180 * 3.1415
+    except KeyboardInterrupt:
+        shutdown()
 
 
 # Example usage (for testing this module in isolation)

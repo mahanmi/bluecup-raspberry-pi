@@ -176,9 +176,6 @@ def is_connected():
     return serial_connection is not None and serial_connection.is_open
 
 
-connect()
-
-
 # Example usage (for testing this module directly)
 if __name__ == "__main__":
     # Replace with your ROV's actual serial port and baud rate
