@@ -6,7 +6,7 @@ from hardware_interface import sensors
 # from hardware_interface import camera
 from hardware_interface import gnss
 from hardware_interface import servo
-from config import ROV_SERIAL_PORT, ROV_BAUD_RATE
+from config import LOG_REPEAT_INTERVAL
 from . import control, telemetry
 
 #    The main class representing the ROV.
@@ -39,6 +39,7 @@ telemetry_data = {
     "camera_tilt": 0,
 }
 last_telemetry_update = time.time()
+last_telemetry_warning = time.monotonic()
 
 # --- Hardware Interfaces ---
 # try:
@@ -121,9 +122,11 @@ def update_telemetry(force_update=False):
     Args:
         force_update (bool): If True, updates regardless of time since last update.
     """
-    global telemetry_data, last_telemetry_update
+    global telemetry_data, last_telemetry_update, last_telemetry_warning
     if not communication.is_connected():
-        logger.warning("Cannot update telemetry: ROV not connected.")
+        if time.monotonic() - last_telemetry_warning > LOG_REPEAT_INTERVAL:
+            logger.warning("Cannot update telemetry: ROV not connected.")
+            last_telemetry_warning = time.monotonic()
         # Potentially clear or mark telemetry as stale
         telemetry_data = {k: None for k in telemetry_data}
         telemetry_data["camera_pan"] = telemetry_data.get(
