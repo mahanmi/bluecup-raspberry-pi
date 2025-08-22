@@ -6,7 +6,6 @@ import random
 
 async def send_heartbeat():
     base_mode = mavlink.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED | mavlink.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-    custom_mode = VehicleModes.MANUAL.value
 
     if robot.is_armed:
         base_mode |= mavlink.MAV_MODE_FLAG_SAFETY_ARMED
@@ -15,7 +14,7 @@ async def send_heartbeat():
         client.source_system,
         client.source_component,
         base_mode,
-        custom_mode,
+        robot.custom_mode.value,
         0, 0
     )
 

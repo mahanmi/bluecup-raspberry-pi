@@ -1,4 +1,4 @@
-from .mavlink import mavlink, client
+from .mavlink import mavlink, client, VehicleModes
 from robot_core import robot
 
 from typing import Dict, Callable
@@ -38,6 +38,32 @@ async def set_camera_focus(msg: mavlink.MAVLink_command_long_message):
 # msg.param2:Focus value
 # msg.param3:Target camera ID. 7 to 255: MAVLink camera component id. 1 to 6 for cameras attached to the autopilot, which don't have a distinct component id. 0: all cameras. This is used to target specific autopilot-connected cameras. It is also used to target specific cameras when the MAV_CMD is used in a mission.	min: 0 max: 255 inc: 1
 # msg.param4:None
+
+
+async def do_set_mode(msg: mavlink.MAVLink_command_long_message):
+    robot.custom_mode = VehicleModes(msg.param2)
+    if msg.param2 == VehicleModes.STABILIZE.value:
+        print("Setting mode to STABILIZE")
+    await client.mav.command_ack_send(
+        msg.command, mavlink.MAV_RESULT_ACCEPTED
+    )
+
+
+# Set system mode.
+# Param (Label)	Description	Values
+# ----------------------------------------------------
+# 1	MAV_MODE_FLAG_CUSTOM_MODE_ENABLED	0b00000001 system-specific custom mode is enabled. When using this flag to enable a custom mode all other flags should be ignored.
+# 2	MAV_MODE_FLAG_TEST_ENABLED	0b00000010 system has a test mode enabled. This flag is intended for temporary system tests and should not be used for stable implementations.
+# 4	MAV_MODE_FLAG_AUTO_ENABLED	0b00000100 autonomous mode enabled, system finds its own goal positions. Guided flag can be set or not, depends on the actual implementation.
+# 8	MAV_MODE_FLAG_GUIDED_ENABLED	0b00001000 guided mode enabled, system flies waypoints / mission items.
+# 16	MAV_MODE_FLAG_STABILIZE_ENABLED	0b00010000 system stabilizes electronically its attitude (and optionally position). It needs however further control inputs to move around.
+# 32	MAV_MODE_FLAG_HIL_ENABLED	0b00100000 hardware in the loop simulation. All motors / actuators are blocked, but internal software is full operational.
+# 64	MAV_MODE_FLAG_MANUAL_INPUT_ENABLED	0b01000000 remote control input is enabled.
+# 128	MAV_MODE_FLAG_SAFETY_ARMED	0b10000000 MAV safety set to armed. Motors are enabled / running / can start. Ready to fly. Additional note: this flag is to be ignore when sent in the command MAV_CMD_DO_SET_MODE and MAV_CMD_COMPONENT_ARM_DISARM shall be used instead. The flag can still be used to report the armed state.
+# ----------------------------------------------------
+# 1 (Mode)	Mode flags. MAV_MODE values can be used to set some mode flag combinations.	MAV_MODE_FLAG
+# 2 (Custom Mode)	Custom system-specific mode (see target autopilot specifications for mode information). If MAV_MODE_FLAG_CUSTOM_MODE_ENABLED is set in param1 (mode) this mode is used: otherwise the field is ignored.
+# 3 (Custom Submode)	Custom sub mode - this is system specific, please refer to the individual autopilot specifications for details.
 
 
 async def component_arm_disarm(msg: mavlink.MAVLink_command_long_message):
@@ -132,6 +158,7 @@ async def nav_waypoint(msg: mavlink.MAVLink_command_int_message):
 
 
 handlers: Dict[int, Callable] = {
+    mavlink.MAV_CMD_DO_SET_MODE: do_set_mode,
     mavlink.MAV_CMD_COMPONENT_ARM_DISARM: component_arm_disarm,
     mavlink.MAV_CMD_DO_REPOSITION: do_reposition,
     mavlink.MAV_CMD_DO_SET_HOME: do_set_home,

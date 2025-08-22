@@ -1,5 +1,6 @@
 import time
 import log
+from api.mavlink import VehicleModes
 from hardware_interface import communication
 from hardware_interface import motors
 from hardware_interface import sensors
@@ -18,6 +19,7 @@ logger.info("Initializing ROV...")
 
 # --- State Variables ---
 is_armed = False
+custom_mode = VehicleModes.MANUAL  # Default mode
 
 roll = 0.0
 pitch = 0.0
