@@ -12,7 +12,7 @@ async def send_heartbeat():
 
     await client.mav.heartbeat_send(
         client.source_system,
-        client.source_component,
+        mavlink.MAV_AUTOPILOT_ARDUPILOTMEGA,
         base_mode,
         robot.custom_mode.value,
         0, 0
