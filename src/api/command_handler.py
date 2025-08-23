@@ -1,4 +1,5 @@
 from .mavlink import mavlink, client, VehicleModes
+from mission_planner import planner
 from robot_core import robot
 
 from typing import Dict, Callable
@@ -94,7 +95,19 @@ async def nav_takeoff(msg: mavlink.MAVLink_command_long_message):
 
 
 async def do_set_home(msg: mavlink.MAVLink_command_long_message):
-    pass
+    if msg.param1 == 0:  # Use current location
+        if robot.lat is None or robot.lon is None or robot.alt is None:
+            await client.mav.command_ack_send(
+                msg.command, mavlink.MAV_RESULT_FAILED)
+            return
+
+        planner.set_current_home(robot.lat, robot.lon, robot.alt)
+    else:
+        # Set home to specified coordinates
+        planner.set_current_home(msg.param5, msg.param6, msg.param7)
+
+    await client.mav.command_ack_send(
+        msg.command, mavlink.MAV_RESULT_ACCEPTED)
 
 
 # msg.param1:Use current location (BOOL_FALSE: use specified location). Values not equal to 0 or 1 are invalid.	BOOL
@@ -141,20 +154,9 @@ async def get_home_position(msg: mavlink.MAVLink_command_int_message):
 
 
 async def mission_start(msg: mavlink.MAVLink_command_long_message):
-    pass
+    planner.start_mission(int(msg.param1), int(msg.param2))
 # msg.param1: (First Item)	first_item: the first mission item to run	min: 0 inc: 1
 # msg.param2:last_item: the last mission item to run (after this item is run, the mission ends)	min: 0 inc: 1
-
-
-async def nav_waypoint(msg: mavlink.MAVLink_command_int_message):
-    pass
-# msg.param1:(Hold)	Hold time. (ignored by fixed wing, time to stay at waypoint for rotary wing)	min: 0	s
-# msg.param2:(Accept Radius)	Acceptance radius (if the sphere with this radius is hit, the waypoint counts as reached)	min: 0	m
-# msg.param3:(Pass Radius)	0 to pass through the WP, if > 0 radius to pass by WP. Positive value for clockwise orbit, negative value for counter-clockwise orbit. Allows trajectory control.		m
-# msg.param4:(Yaw)	Desired yaw angle at waypoint (rotary wing). NaN to use the current system yaw heading mode (e.g. yaw towards next waypoint, yaw to home, etc.).		deg
-# msg.param5:Latitude
-# msg.param6:Longitude
-# msg.param7:Altitude
 
 
 handlers: Dict[int, Callable] = {
@@ -164,7 +166,6 @@ handlers: Dict[int, Callable] = {
     mavlink.MAV_CMD_DO_SET_HOME: do_set_home,
     mavlink.MAV_CMD_MISSION_START: mission_start,
     mavlink.MAV_CMD_NAV_TAKEOFF: nav_takeoff,
-    mavlink.MAV_CMD_NAV_WAYPOINT: nav_waypoint,
     mavlink.MAV_CMD_REQUEST_MESSAGE: request_message,
     mavlink.MAV_CMD_SET_CAMERA_FOCUS: set_camera_focus,
     mavlink.MAV_CMD_SET_CAMERA_ZOOM: set_camera_zoom,

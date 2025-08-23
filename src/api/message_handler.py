@@ -1,8 +1,10 @@
-
+import asyncio
 from .mavlink import mavlink, client, ButtonFunctions
 from . import command_handler
+from mission_planner import planner, missions
 from robot_core import robot
 
+mission_request_retries = 0
 K_MODE_MANUAL = 0b0000000000000010
 
 
@@ -60,12 +62,74 @@ async def param_set_handler(msg: mavlink.MAVLink_param_set_message):
         await client.mav.param_value_send(**new_object, param_count=len(parameters), parama_index=len(parameters)-1)
 
 
+async def mission_request_list_handler(msg: mavlink.MAVLink_mission_request_int_message):
+    await client.mav.mission_count_send(target_system=msg.get_srcSystem(), target_component=msg.get_srcComponent(), count=planner.get_missions_count(), mission_type=0)
+
+
 async def mission_request_int_handler(msg: mavlink.MAVLink_mission_request_int_message):
-    await client.mav.mission_count_send(target_system=255, target_component=240, count=0, mission_type=0)
+    mission = planner.get_mission_item(msg.seq)
+    if not mission:
+        return await client.mav.mission_request_int_send(
+            target_system=msg.get_srcSystem(),
+            target_component=msg.get_srcComponent(),
+            seq=msg.seq
+        )
+        # return await client.mav.mission_ack_send(
+        #     target_system=msg.get_srcSystem(),
+        #     target_component=msg.get_srcComponent(),
+        #     type=mavlink.MAV_MISSION_
+        # )
+    await client.mav.mission_item_int_send(target_system=msg.get_srcSystem(), target_component=msg.get_srcComponent(), seq=msg.seq, **mission.to_dict())
 
 
-async def dc(msg: mavlink.MAVLink_message):
-    pass
+async def mission_item_int_handler(msg: mavlink.MAVLink_mission_item_int_message):
+    global mission_request_retries
+    mission_request_retries = 0
+    mission = missions.from_message(msg)
+
+    if not mission:
+        return await client.mav.mission_ack_send(
+            target_system=msg.get_srcSystem(),
+            target_component=msg.get_srcComponent(),
+            type=mavlink.MAV_MISSION_UNSUPPORTED
+        )
+
+    remaining = planner.store_mission(mission, seq=msg.seq)
+
+    if remaining > 0:
+        mission_request_retries = 5
+        await client.mav.mission_request_int_send(
+            target_system=msg.get_srcSystem(),
+            target_component=msg.get_srcComponent(),
+            seq=msg.seq+1
+        )
+    elif remaining == 0:
+        await client.mav.mission_ack_send(
+            target_system=msg.get_srcSystem(),
+            target_component=msg.get_srcComponent(),
+            type=mavlink.MAV_MISSION_ACCEPTED
+        )
+    else:
+        await client.mav.mission_ack_send(
+            target_system=msg.get_srcSystem(),
+            target_component=msg.get_srcComponent(),
+            type=mavlink.MAV_MISSION_ERROR,
+        )
+
+
+async def mission_count_handler(msg: mavlink.MAVLink_mission_count_message):
+    planner.prepare_mission_download(msg.count)
+
+    if msg.count > 0:
+        await client.mav.mission_request_int_send(
+            target_system=msg.get_srcSystem(),
+            target_component=msg.get_srcComponent(),
+            seq=0
+        )
+
+
+async def mission_ack_handler(msg: mavlink.MAVLink_mission_ack_message):
+    print("Mission ACK received,", msg.type)
 
 
 handlers = {
@@ -77,9 +141,11 @@ handlers = {
     mavlink.MAVLINK_MSG_ID_PARAM_REQUEST_LIST: param_request_list_handler,
     mavlink.MAVLINK_MSG_ID_PARAM_REQUEST_READ: param_request_read_handler,
     mavlink.MAVLINK_MSG_ID_PARAM_SET: param_set_handler,
-    mavlink.MAVLINK_MSG_ID_MISSION_REQUEST_LIST: mission_request_int_handler,
-    mavlink.MAVLINK_MSG_ID_MISSION_REQUEST_INT: dc,
-    mavlink.MAVLINK_MSG_ID_MISSION_ITEM_INT: dc,
+    mavlink.MAVLINK_MSG_ID_MISSION_REQUEST_LIST: mission_request_list_handler,
+    mavlink.MAVLINK_MSG_ID_MISSION_REQUEST_INT: mission_request_int_handler,
+    mavlink.MAVLINK_MSG_ID_MISSION_ITEM_INT: mission_item_int_handler,
+    mavlink.MAVLINK_MSG_ID_MISSION_COUNT: mission_count_handler,
+    mavlink.MAVLINK_MSG_ID_MISSION_ACK: mission_ack_handler,
 }
 
 

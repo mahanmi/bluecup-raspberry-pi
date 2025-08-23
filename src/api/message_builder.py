@@ -1,5 +1,6 @@
 from .mavlink import mavlink, client, VehicleModes
 from typing import Dict, Callable
+from mission_planner import planner
 from robot_core import robot
 import random
 
@@ -17,6 +18,8 @@ async def send_heartbeat():
         robot.custom_mode.value,
         0, 0
     )
+    print(
+        f"Sent heartbeat with base_mode: {base_mode}, custom_mode: {robot.custom_mode.value}")
 
 
 # MPU 6050 , ICM
@@ -257,9 +260,9 @@ async def send_global_position_int():
 async def send_home_position():
     await client.mav.home_position_send(
         time_usec=client.boot_time_usec(),
-        latitude=int(robot.lat*1e7),
-        longitude=int(robot.lon*1e7),
-        altitude=int(robot.alt*1e3),
+        latitude=int(planner.home_lat*1e7),
+        longitude=int(planner.home_lon*1e7),
+        altitude=int(planner.home_alt*1e3),
         x=0,
         y=0,
         z=0,
