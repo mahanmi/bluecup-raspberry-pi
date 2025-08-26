@@ -1158,6 +1158,7 @@ events: Dict[int, tuple[float, Callable]] = {
     mavlink.MAVLINK_MSG_ID_MAG_CAL_PROGRESS: (1/3, send_mag_cal_progress),
     mavlink.MAVLINK_MSG_ID_MAG_CAL_REPORT: (1/3, send_mag_cal_report),
     mavlink.MAVLINK_MSG_ID_MEMINFO: (1/2, send_meminfo),
+    mavlink.MAVLINK_MSG_ID_NAMED_VALUE_FLOAT: (1/1, send_named_value_float),
     mavlink.MAVLINK_MSG_ID_NAV_CONTROLLER_OUTPUT: (1/2, send_nav_controller_output),
     mavlink.MAVLINK_MSG_ID_PARAM_VALUE: (1/2, send_param_value),
     mavlink.MAVLINK_MSG_ID_POWER_STATUS: (1/2, send_power_status),
