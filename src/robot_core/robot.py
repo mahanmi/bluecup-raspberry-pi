@@ -233,6 +233,8 @@ def start():
             pitch = pitch / 180 * 3.1415
             yaw = yaw / 180 * 3.1415
     except KeyboardInterrupt:
+        pass
+    finally:
         shutdown()
 
 
