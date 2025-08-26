@@ -112,7 +112,6 @@ def set_movement_targets(x: float, y: float, z: float, yaw: float):
         # Assumes MotorController has this
         motors.set_thruster_speeds(thruster_outputs)
     elif not is_armed:
-        logger.warning("Cannot apply movement: ROV not armed.")
         motors.stop_all_motors()  # Ensure motors are stopped if disarmed
     else:
         logger.warning("Cannot apply movement: ROV not connected.")
