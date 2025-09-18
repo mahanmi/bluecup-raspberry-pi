@@ -3,3 +3,4 @@
 __pycache__
 *.tlog
 *.tlog.raw
+mavlink2rest
