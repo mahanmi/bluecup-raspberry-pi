@@ -1,0 +1,28 @@
+# /etc/systemd/system/mavlink.service
+[Unit]
+Description=Mavlink Camera Manager Service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# Run as root (omit User= to default to root, or set it explicitly)
+User=root
+WorkingDirectory=/opt/mavlink-camera-manager
+ExecStart=/opt/mavlink-camera-manager/mavlink-camera-manager-aarch64
+
+# Restart policy
+Restart=always
+RestartSec=2
+StartLimitIntervalSec=0
+
+# Basic hardening (still useful even as root)
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+# If the app needs to write somewhere, whitelist it:
+# ReadWritePaths=/var/lib/mavlink-camera-manager
+
+[Install]
+WantedBy=multi-user.target
