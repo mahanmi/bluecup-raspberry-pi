@@ -1,7 +1,23 @@
+import sys
+import os
+# Add project root to Python path for direct execution
+if __name__ == "__main__":
+    project_root = os.path.abspath(os.path.join(
+        os.path.dirname(__file__), '..', '..'))
+    if project_root not in sys.path:
+        sys.path.insert(0, project_root)
+
 import serial
 import time
-from src.config import ROV_SERIAL_PORT, ROV_BAUD_RATE, ROV_TIMEOUT, EOL
-import src.log as log
+
+# Smart import strategy - try src. prefix first, then without
+try:
+    from src.config import ROV_SERIAL_PORT, ROV_BAUD_RATE, ROV_TIMEOUT, EOL
+    import src.log as log
+except ImportError:
+    # Running from src directory, use relative imports
+    from config import ROV_SERIAL_PORT, ROV_BAUD_RATE, ROV_TIMEOUT, EOL
+    import log
 
 logger = log.getLogger(__name__)
 

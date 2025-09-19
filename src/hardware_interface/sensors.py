@@ -1,8 +1,34 @@
 # hardware_interface/sensors.py
-from . import communication
-from config import ROV_SERIAL_PORT, ROV_BAUD_RATE
+import sys
+import os
+# Add project root to Python path for direct execution
+if __name__ == "__main__":
+    project_root = os.path.abspath(os.path.join(
+        os.path.dirname(__file__), '..', '..'))
+    if project_root not in sys.path:
+        sys.path.insert(0, project_root)
+
+# Use absolute imports when running directly, relative when imported
+try:
+    from . import communication
+except ImportError:
+    # Running directly, use absolute import
+    try:
+        from src.hardware_interface import communication
+    except ImportError:
+        # Running from src directory
+        from hardware_interface import communication
+
+# Smart import strategy for other modules
+try:
+    from src.config import ROV_SERIAL_PORT, ROV_BAUD_RATE
+    import src.log as log
+except ImportError:
+    # Running from src directory
+    from config import ROV_SERIAL_PORT, ROV_BAUD_RATE
+    import log
+
 import time  # For potential delays or retries
-import log
 
 logger = log.getLogger(__name__)
 

@@ -1,5 +1,29 @@
-import log
-from . import communication
+import sys
+import os
+# Add project root to Python path for direct execution
+if __name__ == "__main__":
+    project_root = os.path.abspath(os.path.join(
+        os.path.dirname(__file__), '..', '..'))
+    if project_root not in sys.path:
+        sys.path.insert(0, project_root)
+
+# Smart import strategy for log
+try:
+    import src.log as log
+except ImportError:
+    # Running from src directory
+    import log
+
+# Use absolute imports when running directly, relative when imported
+try:
+    from . import communication
+except ImportError:
+    # Running directly, use absolute import
+    try:
+        from src.hardware_interface import communication
+    except ImportError:
+        # Running from src directory
+        from hardware_interface import communication
 
 logger = log.getLogger(__name__)
 
