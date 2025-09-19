@@ -1,4 +1,17 @@
 import logging
+import sys
+import os
+
+# Smart import strategy for config
+try:
+    from src.config import LOG_LEVEL
+except ImportError:
+    try:
+        from config import LOG_LEVEL
+    except ImportError:
+        # Fallback if config is not available
+        LOG_LEVEL = logging.INFO
+
 getLogger = logging.getLogger
 
 
@@ -25,7 +38,10 @@ class CustomFormatter(logging.Formatter):
 
 
 class CustomLogger(logging.Logger):
-    def __init__(self, name, level=logging.INFO):
+    def __init__(self, name, level=None):
+        # Use log level from config
+        if level is None:
+            level = LOG_LEVEL
         super().__init__(name, level)
         handler = logging.StreamHandler()
         handler.setFormatter(CustomFormatter())
