@@ -12090,6 +12090,23 @@ class MAVLink_manual_control_message(MAVLink_message):
         self.aux4 = aux4
         self.aux5 = aux5
         self.aux6 = aux6
+        # buttons bitmask
+        self.cross = (1 << 0 & self.buttons) != 0
+        self.circle = (1 << 1 & self.buttons) != 0
+        self.square = (1 << 2 & self.buttons) != 0
+        self.triangle = (1 << 3 & self.buttons) != 0
+        self.l1 = (1 << 4 & self.buttons) != 0
+        self.r1 = (1 << 5 & self.buttons) != 0
+        self.l2 = (1 << 6 & self.buttons) != 0
+        self.r2 = (1 << 7 & self.buttons) != 0
+        self.share = (1 << 8 & self.buttons) != 0
+        self.options = (1 << 9 & self.buttons) != 0
+        self.l3 = (1 << 10 & self.buttons) != 0
+        self.r3 = (1 << 11 & self.buttons) != 0
+        self.dpad_up = (1 << 12 & self.buttons) != 0
+        self.dpad_down = (1 << 13 & self.buttons) != 0
+        self.dpad_left = (1 << 14 & self.buttons) != 0
+        self.dpad_right = (1 << 15 & self.buttons) != 0
 
     def pack(self, mav: "MAVLink", force_mavlink1: bool = False) -> bytes:
         return self._pack(mav, self.crc_extra, self.unpacker.pack(self.x, self.y, self.z, self.r, self.buttons, self.target, self.buttons2, self.enabled_extensions, self.s, self.t, self.aux1, self.aux2, self.aux3, self.aux4, self.aux5, self.aux6), force_mavlink1=force_mavlink1)
