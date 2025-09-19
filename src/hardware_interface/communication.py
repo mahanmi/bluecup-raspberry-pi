@@ -1,7 +1,7 @@
 import serial
 import time
-import log
-from config import ROV_SERIAL_PORT, ROV_BAUD_RATE, ROV_TIMEOUT, EOL
+from src.config import ROV_SERIAL_PORT, ROV_BAUD_RATE, ROV_TIMEOUT, EOL
+import src.log as log
 
 logger = log.getLogger(__name__)
 
@@ -14,6 +14,34 @@ baudrate = ROV_BAUD_RATE
 timeout = ROV_TIMEOUT
 eol = EOL.encode('utf-8')  # Encode EOL to bytes
 serial_connection = None
+
+
+def find_serial_ports():
+    """
+    Lists serial port names
+    :raises EnvironmentError:
+        On unsupported or unknown platforms
+    :returns:
+        A list of the serial ports available on the system
+    """
+    import sys
+    import glob
+
+    ports = []
+    ports += sorted(glob.glob("/dev/serial/by-id/*"))
+    ports += ["/dev/ttyUSB0", "/dev/ttyACM0"]
+    ports += sorted(glob.glob("/dev/ttyUSB*"))
+    ports += sorted(glob.glob("/dev/ttyACM*"))
+
+    result = []
+    for port in ports:
+        try:
+            s = serial.Serial(port)
+            s.close()
+            result.append(port)
+        except (OSError, serial.SerialException):
+            pass
+    return result
 
 
 def connect():
@@ -41,6 +69,7 @@ def disconnect():
     """
     Closes the serial connection.
     """
+    global serial_connection
     if serial_connection and serial_connection.is_open:
         try:
             serial_connection.close()
@@ -182,11 +211,15 @@ if __name__ == "__main__":
     # On Linux, it might be /dev/ttyUSB0, /dev/ttyACM0, etc.
     # On Windows, it might be COM3, COM4, etc.
     # Example, use a virtual serial port for testing if no hardware
-    ROV_PORT = "/dev/ttyS10"
+    ROV_PORT = "/dev/serial/by-id/usb-1a86_USB_Serial-if00-port0"
     # To create virtual serial ports for testing on Linux:
     # sudo apt-get install socat
     # socat -d -d pty,raw,echo=0 pty,raw,echo=0
     # This will output two port names like /dev/pts/X and /dev/pts/Y
+
+    print(find_serial_ports())
+
+    connect()
 
     if is_connected():
         # Example: Send a command and try to read a response

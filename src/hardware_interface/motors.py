@@ -1,5 +1,6 @@
 from . import communication
-import log
+from src.config import ROV_SERIAL_PORT
+import src.log as log
 
 logger = log.getLogger(__name__)
 
@@ -144,21 +145,18 @@ if __name__ == "__main__":
     # For actual use, it would be `from .communication import SerialCommunicator`
     # from communication import SerialCommunicator # For standalone test
 
-    # --- Configuration ---
-    # Replace with your ROV's actual serial port and baud rate
-    ROV_SERIAL_PORT = "/dev/serial/by-id/usb-1a86_USB_Serial-if00-port0"  # Use a virtual serial port pair for testing
-    ROV_BAUD_RATE = 115200
-    # --- End Configuration ---
+    communication.connect()
 
     if communication.is_connected():
         import time
 
         print("Setting motor 0 to speed 100")
-        set_motor_speed(0, 20)
+        set_motor_speed(5, 50)
+        print(get_motor_values())
         time.sleep(1)  # Keep motor running for a bit
 
         print("Setting motor 0 to speed -100 (reverse)")
-        set_motor_speed(0, -20)
+        set_motor_speed(5, -50)
         time.sleep(1)
 
         # print("Setting thruster speeds [50, -50, 75, -75]")
