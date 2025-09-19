@@ -11,9 +11,9 @@ import math
 # - 2 thrusters for yaw (rotation)
 # - Strafing (sway) might be achieved by differential thrust or dedicated thrusters.
 
-# For simplicity, let's assume thruster outputs are scaled from -255 to 255.
+# For simplicity, let's assume thruster outputs are scaled from -100 to 100.
 # This would be defined by your MotorController's expected input.
-THRUSTER_MAX_OUTPUT = 255
+THRUSTER_MAX_OUTPUT = 100
 
 
 logger = log.getLogger(__name__)
@@ -61,8 +61,9 @@ def calculate_thruster_outputs(x: float, y: float, z: float, yaw: float) -> list
     # 2. Heave (Up/Down - Z)
     # Assuming thrusters 2 and 3 contribute to heave
     heave_thrust_component = z * THRUSTER_MAX_OUTPUT
-    thrusters[2] += heave_thrust_component
-    thrusters[3] += heave_thrust_component
+    thrusters[4] += heave_thrust_component
+    thrusters[5] += heave_thrust_component
+    thrusters[6] += heave_thrust_component
 
     # 3. Yaw (Rotation - Yaw)
     # Assuming thrusters 0 & 1 (differentially) or 4 & 5 contribute to yaw
@@ -72,6 +73,7 @@ def calculate_thruster_outputs(x: float, y: float, z: float, yaw: float) -> list
     thrusters[0] += yaw_thrust_component
     # Starboard thruster more reverse for right turn
     thrusters[1] -= yaw_thrust_component
+    #todo should set thrusters[2]
 
     # (Alternative or additional yaw using dedicated thrusters 4 and 5)
     # If thrusters 4 and 5 are horizontal and opposing for yaw:
@@ -85,8 +87,8 @@ def calculate_thruster_outputs(x: float, y: float, z: float, yaw: float) -> list
         sway_thrust_component = y * THRUSTER_MAX_OUTPUT
         # Example: Thrusters 4 (port side) and 5 (starboard side) push in the same direction for sway.
         # To strafe right (positive y), both might push right.
-        thrusters[4] += sway_thrust_component
-        thrusters[5] += sway_thrust_component
+        thrusters[4] += 0
+        thrusters[5] += 0
 
     # Normalize/Clamp thruster outputs to be within [-THRUSTER_MAX_OUTPUT, THRUSTER_MAX_OUTPUT]
     # A more sophisticated approach involves scaling down all thruster values proportionally
