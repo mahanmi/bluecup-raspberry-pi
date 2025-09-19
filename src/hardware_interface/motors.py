@@ -3,53 +3,115 @@ import log
 
 logger = log.getLogger(__name__)
 
+# Global array to store motor values for all 6 motors
+# Index corresponds to motor_id (0-5)
+motor_values = [0, 0, 0, 0, 0, 0]
+
+
+def get_command():
+    global motor_values
+    return "SP " + " ".join(str(val) for val in motor_values) + "\n"
+
 
 def set_motor_speed(motor_id: int, speed: int) -> bool:
     """
-    Sets the speed of a specific motor.
+    Sets the speed of a specific motor and sends updated command to STM32.
     Args:
-        motor_id (int): The ID of the motor (e.g., 0 for front-left, 1 for front-right).
+        motor_id (int): The ID of the motor (0-5 for 6 motors).
         speed (int): The speed, e.g., -255 to 255 (0 is stop).
                         The range and meaning depend on your hardware.
     Returns:
         bool: True if the command was likely sent successfully, False otherwise.
     """
-    # **IMPORTANT**: Replace "M" and the command format with your hardware's protocol.
-    # Example command: "M:<motor_id>:<speed>\n"
-    # e.g., "M:0:150" sets motor 0 to speed 150
-    # e.g., "M:1:-100" sets motor 1 to speed -100 (reverse)
-    command = f"M:{motor_id}:{speed}"
+    global motor_values
+
+    # Validate motor_id range
+    if motor_id < 0 or motor_id >= len(motor_values):
+        logger.error(
+            f"Invalid motor_id {motor_id}. Must be 0-{len(motor_values)-1}")
+        return False
+
+    # Update the global motor values array
+    motor_values[motor_id] = speed
+
+    # Send all motor values to STM32 in the required format
+    # "SP 50 -30 0 20 -15 75\n"
+    command = get_command()
 
     if communication.send_command(command):
-        logger.info(f"Motor {motor_id} speed set to {speed}")
-        # Optional: Wait for an acknowledgment if your hardware sends one
-        # ack = communication.read_line(timeout_override=0.5)
-        # if ack and "OK" in ack: # Or whatever your hardware returns
-        #     return True
-        # else:
-        #     logger.warning(f"No/invalid ACK for motor command: {command} -> {ack}")
-        #     return False
-        return True  # Assuming command sent is enough for now
+        logger.info(
+            f"Motor {motor_id} speed set to {speed}. All motors: {motor_values}")
+        return True
     else:
-        logger.error(
-            f"Failed to send command to set motor {motor_id} speed.")
+        logger.error(f"Failed to send command to set motor {motor_id} speed.")
+        return False
+
+
+def get_motor_values() -> list[int]:
+    """
+    Returns the current motor values array.
+    Returns:
+        list[int]: Current motor values for all 6 motors.
+    """
+    return motor_values.copy()
+
+
+def set_all_motor_speeds(speeds: list[int]) -> bool:
+    """
+    Sets all motor speeds at once.
+    Args:
+        speeds (list[int]): List of 6 motor speeds.
+    Returns:
+        bool: True if command sent successfully, False otherwise.
+    """
+    global motor_values
+
+    if len(speeds) != 6:
+        logger.error(f"Expected 6 motor speeds, got {len(speeds)}")
+        return False
+
+    # Update all motor values
+    motor_values = speeds.copy()
+
+    # Send command to STM32
+    command = get_command()
+
+    if communication.send_command(command):
+        logger.info(f"All motor speeds set: {motor_values}")
+        return True
+    else:
+        logger.error("Failed to send command to set all motor speeds.")
+        return False
+
+
+def send_current_motor_command() -> bool:
+    """
+    Sends the current motor values to STM32 without changing them.
+    Useful for re-sending the current state.
+    Returns:
+        bool: True if command sent successfully, False otherwise.
+    """
+    command = get_command()
+
+    if communication.send_command(command):
+        logger.info(f"Current motor command sent: {motor_values}")
+        return True
+    else:
+        logger.error("Failed to send current motor command.")
         return False
 
 
 def stop_all_motors() -> bool:
     """
-    Stops all motors.
-    This might involve sending individual stop commands or a global stop command.
+    Stops all motors by setting all values to 0.
     """
-    # **IMPORTANT**: Replace with your hardware's global stop command or loop
-    # Example: Assuming a global stop command "M:ALL:0"
-    command = "M:ALL:0"
-    # Or, if you need to stop them individually:
-    # success = True
-    # for i in range(num_motors):
-    #     if not set_motor_speed(i, 0):
-    #         success = False
-    # return success
+    global motor_values
+
+    # Set all motor values to 0
+    motor_values = [0, 0, 0, 0, 0, 0]
+
+    # Send stop command to STM32
+    command = get_command()
 
     if communication.send_command(command):
         logger.info("All motors commanded to stop.")
@@ -64,25 +126,16 @@ def set_thruster_speeds(speeds: list[int]) -> bool:
     Sets speeds for multiple thrusters at once.
     Args:
         speeds (list[int]): A list of speeds, one for each thruster.
-                            The order should match your ROV's thruster configuration.
+                            Should contain exactly 6 values for the 6 motors.
     Returns:
-        bool: True if all commands were likely sent successfully, False otherwise.
+        bool: True if command sent successfully, False otherwise.
     """
-    # Example: Sending commands for thrusters 0, 1, 2, 3
-    # This assumes your `set_motor_speed` handles individual thrusters
-    # and your `motor_id` maps to thruster indices.
-    all_successful = True
-    for i, speed_value in enumerate(speeds):
-        if not set_motor_speed(motor_id=i, speed=speed_value):
-            all_successful = False
-            logger.warning(f"Failed to set speed for thruster {i}")
+    if len(speeds) != 6:
+        logger.error(f"Expected 6 thruster speeds, got {len(speeds)}")
+        return False
 
-    if all_successful:
-        logger.info(f"Thruster speeds set: {speeds}")
-    else:
-        logger.error(
-            f"One or more thruster speed commands failed for speeds: {speeds}")
-    return all_successful
+    # Use the new set_all_motor_speeds function
+    return set_all_motor_speeds(speeds)
 
 
 # Example Usage (if you were to test motors.py directly)
@@ -93,24 +146,24 @@ if __name__ == "__main__":
 
     # --- Configuration ---
     # Replace with your ROV's actual serial port and baud rate
-    ROV_SERIAL_PORT = "/dev/ttyS10"  # Use a virtual serial port pair for testing
-    ROV_BAUD_RATE = 9600
+    ROV_SERIAL_PORT = "/dev/serial/by-id/usb-1a86_USB_Serial-if00-port0"  # Use a virtual serial port pair for testing
+    ROV_BAUD_RATE = 115200
     # --- End Configuration ---
 
     if communication.is_connected():
         import time
 
         print("Setting motor 0 to speed 100")
-        set_motor_speed(0, 100)
+        set_motor_speed(0, 20)
         time.sleep(1)  # Keep motor running for a bit
 
         print("Setting motor 0 to speed -100 (reverse)")
-        set_motor_speed(0, -100)
+        set_motor_speed(0, -20)
         time.sleep(1)
 
-        print("Setting thruster speeds [50, -50, 75, -75]")
-        set_thruster_speeds([50, -50, 75, -75])
-        time.sleep(2)
+        # print("Setting thruster speeds [50, -50, 75, -75]")
+        # set_thruster_speeds([50, -50, 75, -75])
+        # time.sleep(2)
 
         print("Stopping all motors")
         stop_all_motors()

@@ -62,10 +62,10 @@ def send_command(command_str):
         logger.warning(
             f"Not connected to {port}. Cannot send command: {command_str}")
         # Optionally, try to reconnect:
-        # logger.info("Attempting to reconnect...")
-        # connect()
-        # if not is_connected():
-        #     return False
+        logger.info("Attempting to reconnect...")
+        connect()
+        if not is_connected():
+            return False
         return False
 
     try:
