@@ -51,6 +51,8 @@ def set_motor_speed(motor_id: int, speed: int) -> bool:
     """
     global motor_values
 
+    motor_id = motor_id-1  # Convert to 0-based index
+
     # Validate motor_id range
     if motor_id < 0 or motor_id >= len(motor_values):
         logger.error(
@@ -175,12 +177,12 @@ if __name__ == "__main__":
     if communication.is_connected():
         import time
 
-        print("Setting motor 0 to speed 100")
+        print("Setting motor 0 to speed 50")
         set_motor_speed(5, 50)
         print(get_motor_values())
         time.sleep(1)  # Keep motor running for a bit
 
-        print("Setting motor 0 to speed -100 (reverse)")
+        print("Setting motor 0 to speed -50 (reverse)")
         set_motor_speed(5, -50)
         time.sleep(1)
 
