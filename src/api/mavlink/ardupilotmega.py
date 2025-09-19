@@ -7,12 +7,18 @@ Note: this file has been auto-generated. DO NOT EDIT
 """
 import hashlib
 import json
-import log
 import os
 import struct
 import asyncio
 import time
 from builtins import object, range
+
+# Smart import strategy - try src. prefix first, then without
+try:
+    import src.log as log
+except ImportError:
+    # Running from src directory, use relative imports
+    import log
 from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple, Type, Union, cast
 
 WIRE_PROTOCOL_VERSION = "2.0"

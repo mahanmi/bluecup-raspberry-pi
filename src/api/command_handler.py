@@ -1,7 +1,16 @@
-from .mavlink import mavlink, client, VehicleModes
-from mission_planner import planner
-from robot_core import robot
+import sys
+import os
 
+# Smart import strategy - try src. prefix first, then without
+try:
+    from src.mission_planner import planner
+    from src.robot_core import robot
+except ImportError:
+    # Running from src directory, use relative imports
+    from mission_planner import planner
+    from robot_core import robot
+
+from .mavlink import mavlink, client, VehicleModes
 from typing import Dict, Callable
 
 

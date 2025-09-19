@@ -1,7 +1,23 @@
+import sys
+import os
+# Add project root to Python path for direct execution
+if __name__ == "__main__":
+    project_root = os.path.abspath(os.path.join(
+        os.path.dirname(__file__), '..', '..'))
+    if project_root not in sys.path:
+        sys.path.insert(0, project_root)
+
 from typing import Any, Dict
-from hardware_interface import communication
 import time
-import log
+
+# Smart import strategy - try src. prefix first, then without
+try:
+    from src.hardware_interface import communication
+    import src.log as log
+except ImportError:
+    # Running from src directory, use relative imports
+    from hardware_interface import communication
+    import log
 
 logger = log.getLogger(__name__)
 logger.info("TelemetryCollector initialized.")

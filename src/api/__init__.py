@@ -1,5 +1,13 @@
 import asyncio
-import log
+import sys
+import os
+
+# Smart import strategy - try src. prefix first, then without
+try:
+    import src.log as log
+except ImportError:
+    # Running from src directory, use relative imports
+    import log
 
 from .mavlink import mavlink, client
 from . import message_handler, message_builder

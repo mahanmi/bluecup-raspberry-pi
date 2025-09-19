@@ -1,8 +1,18 @@
 import asyncio
+import sys
+import os
+
+# Smart import strategy - try src. prefix first, then without
+try:
+    from src.mission_planner import planner, missions
+    from src.robot_core import robot
+except ImportError:
+    # Running from src directory, use relative imports
+    from mission_planner import planner, missions
+    from robot_core import robot
+
 from .mavlink import mavlink, client, ButtonFunctions
 from . import command_handler
-from mission_planner import planner, missions
-from robot_core import robot
 
 mission_request_retries = 0
 K_MODE_MANUAL = 0b0000000000000010
@@ -18,6 +28,12 @@ async def command_ack_handler(msg: mavlink.MAVLink_command_ack_message):
 
 
 async def manual_control_handler(msg: mavlink.MAVLink_manual_control_message):
+    x=msg.x / 1000.0  # Scale from -1000 to 1000 to -1.0 to 1.0
+    y=msg.y / 1000.0  # Scale from -1000 to 1000 to -1.0 to 1.0
+    z=(msg.z - 500) / 500.0  # Scale from 0 to 1000 to -1.0 to 1.0
+    yaw=msg.r / 1000.0  # Scale from -1000 to 1000 to -1.0 to 1.0
+    robot.set_movement_targets(x=x, y=y, z=z, yaw=yaw)
+    
     pass
 
 

@@ -1,14 +1,38 @@
+import sys
+import os
+# Add project root to Python path for direct execution
+if __name__ == "__main__":
+    project_root = os.path.abspath(os.path.join(
+        os.path.dirname(__file__), '..', '..'))
+    if project_root not in sys.path:
+        sys.path.insert(0, project_root)
+
 import time
-import log
-from api.mavlink import VehicleModes
-from hardware_interface import communication
-from hardware_interface import motors
-from hardware_interface import sensors
-# from hardware_interface import camera
-from hardware_interface import gnss
-from hardware_interface import servo
-from config import LOG_REPEAT_INTERVAL
-from . import control, telemetry
+
+# Smart import strategy - try src. prefix first, then without
+try:
+    from src.api.mavlink import VehicleModes
+    from src.hardware_interface import communication
+    from src.hardware_interface import motors
+    from src.hardware_interface import sensors
+    # from src.hardware_interface import camera
+    from src.hardware_interface import gnss
+    from src.hardware_interface import servo
+    from src.config import LOG_REPEAT_INTERVAL
+    import src.log as log
+    from src.robot_core import control, telemetry
+except ImportError:
+    # Running from src directory, use relative imports
+    from api.mavlink import VehicleModes
+    from hardware_interface import communication
+    from hardware_interface import motors
+    from hardware_interface import sensors
+    # from hardware_interface import camera
+    from hardware_interface import gnss
+    from hardware_interface import servo
+    from config import LOG_REPEAT_INTERVAL
+    import log
+    from . import control, telemetry
 
 #    The main class representing the ROV.
 #    Manages state, hardware interfaces, and high-level operations.
@@ -103,11 +127,14 @@ def set_movement_targets(x: float, y: float, z: float, yaw: float):
     current_target_movement = {"x": x, "y": y, "z": z, "yaw": yaw}
     logger.debug(
         f"Movement targets set: {current_target_movement}")
-
+    
+    print(f"x={x} y={y} z={z} yaw={yaw}")
+        
     if is_armed and communication.is_connected():
         thruster_outputs = control.calculate_thruster_outputs(
             x, y, z, yaw
-        )
+        )        
+        print(f"Calculated thruster outputs: {thruster_outputs}")
         current_thruster_outputs = thruster_outputs
         # Assumes MotorController has this
         motors.set_thruster_speeds(thruster_outputs)
@@ -240,6 +267,7 @@ def start():
 # Example usage (for testing this module in isolation)
 if __name__ == "__main__":
     try:
+        communication.connect()
         if communication.is_connected():
             print("ROV Connected. Arming...")
             arm()
@@ -255,9 +283,9 @@ if __name__ == "__main__":
             time.sleep(0.1)
             print(f"State after move command: {get_current_state()}")
 
-            print("\nSetting camera pan to 30, tilt to -10")
-            set_camera_pan_tilt(pan_angle=30, tilt_angle=-10)
-            print(f"State after camera command: {get_current_state()}")
+            # print("\nSetting camera pan to 30, tilt to -10")
+            # set_camera_pan_tilt(pan_angle=30, tilt_angle=-10)
+            # print(f"State after camera command: {get_current_state()}")
 
             time.sleep(1)
             print("\nDisarming ROV...")
