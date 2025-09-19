@@ -1,6 +1,22 @@
 # robot_core/control.py
-import log
+import sys
+import os
+# Add project root to Python path for direct execution
+if __name__ == "__main__":
+    project_root = os.path.abspath(os.path.join(
+        os.path.dirname(__file__), '..', '..'))
+    if project_root not in sys.path:
+        sys.path.insert(0, project_root)
+
 import math
+import logging
+
+# Smart import strategy - try src. prefix first, then without
+try:
+    import src.log as log
+except ImportError:
+    # Running from src directory, use relative imports
+    import log
 
 # --- Thruster Configuration ---
 # This is a conceptual example. You'll need to define this based on your ROV.
@@ -33,7 +49,7 @@ def calculate_thruster_outputs(x: float, y: float, z: float, yaw: float) -> list
         z (float): Desired up/down thrust (-1.0 to 1.0).
         yaw (float): Desired rotational thrust/rate (-1.0 to 1.0).
     Returns:
-        list[int]: A list of thruster output values (e.g., scaled -255 to 255).
+        list[int]: A list of thruster output values (e.g., scaled -100 to 100).
                     The order depends on your MotorController's thruster indexing.
     """
     # This is a VERY simplified mixing algorithm.
@@ -61,9 +77,9 @@ def calculate_thruster_outputs(x: float, y: float, z: float, yaw: float) -> list
     # 2. Heave (Up/Down - Z)
     # Assuming thrusters 2 and 3 contribute to heave
     heave_thrust_component = z * THRUSTER_MAX_OUTPUT
+    thrusters[3] += heave_thrust_component
     thrusters[4] += heave_thrust_component
     thrusters[5] += heave_thrust_component
-    thrusters[6] += heave_thrust_component
 
     # 3. Yaw (Rotation - Yaw)
     # Assuming thrusters 0 & 1 (differentially) or 4 & 5 contribute to yaw
@@ -73,7 +89,6 @@ def calculate_thruster_outputs(x: float, y: float, z: float, yaw: float) -> list
     thrusters[0] += yaw_thrust_component
     # Starboard thruster more reverse for right turn
     thrusters[1] -= yaw_thrust_component
-    #todo should set thrusters[2]
 
     # (Alternative or additional yaw using dedicated thrusters 4 and 5)
     # If thrusters 4 and 5 are horizontal and opposing for yaw:
@@ -95,6 +110,7 @@ def calculate_thruster_outputs(x: float, y: float, z: float, yaw: float) -> list
     # if any single thruster command exceeds the maximum, to maintain the desired maneuver shape.
 
     # Simple clamping:
+    print(f"Thruster raw values before clamping: {thrusters}")
     scaled_thrusters_int = []
     for t_val in thrusters:
         clamped_val = max(-THRUSTER_MAX_OUTPUT,
