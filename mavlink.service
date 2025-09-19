@@ -16,13 +16,6 @@ Restart=always
 RestartSec=2
 StartLimitIntervalSec=0
 
-# Basic hardening (still useful even as root)
-NoNewPrivileges=true
-PrivateTmp=true
-ProtectSystem=full
-ProtectHome=true
-# If the app needs to write somewhere, whitelist it:
-# ReadWritePaths=/var/lib/mavlink-camera-manager
 
 [Install]
 WantedBy=multi-user.target
