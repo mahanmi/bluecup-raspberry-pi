@@ -142,11 +142,11 @@ def calculate_thruster_outputs(x: float, y: float, z: float, yaw: float, gear_up
         # Example: Thrusters 4 (port side) and 5 (starboard side) push in the same direction for sway.
         # To strafe right (positive y), both might push right.
         if y > 0:
+            thrusters[0] += sway_thrust_component
+            thrusters[2] += sway_thrust_component
+        elif y < 0:
             thrusters[1] -= sway_thrust_component
             thrusters[2] -= sway_thrust_component
-        elif y < 0:
-            thrusters[2] += sway_thrust_component
-            thrusters[3] += sway_thrust_component
 
     # 5. Apply tilt adjustment to vertical thrusters
     thrusters[3] += TILT * THRUSTER_MAX_OUTPUT
