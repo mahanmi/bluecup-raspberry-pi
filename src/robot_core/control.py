@@ -107,11 +107,11 @@ def calculate_thruster_outputs(x: float, y: float, z: float, yaw: float) -> list
         # Example: Thrusters 4 (port side) and 5 (starboard side) push in the same direction for sway.
         # To strafe right (positive y), both might push right.
         if y > 0:
+            thrusters[0] += sway_thrust_component
+            thrusters[2] += sway_thrust_component
+        elif y < 0:
             thrusters[1] -= sway_thrust_component
             thrusters[2] -= sway_thrust_component
-        elif y < 0:
-            thrusters[2] += sway_thrust_component
-            thrusters[3] += sway_thrust_component
 
     # Normalize/Clamp thruster outputs to be within [-THRUSTER_MAX_OUTPUT, THRUSTER_MAX_OUTPUT]
     # A more sophisticated approach involves scaling down all thruster values proportionally
