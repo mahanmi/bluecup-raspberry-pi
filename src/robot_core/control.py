@@ -70,15 +70,17 @@ def calculate_thruster_outputs(x: float, y: float, z: float, yaw: float) -> list
 
     # 1. Surge (Forward/Backward - X)
     # Assuming thrusters 0 and 1 contribute to surge
+    # M1 -> - , M2 -> + => go forward
     surge_thrust_component = x * THRUSTER_MAX_OUTPUT
-    thrusters[0] += surge_thrust_component
+    thrusters[0] -= surge_thrust_component
     thrusters[1] += surge_thrust_component
 
     # 2. Heave (Up/Down - Z)
     # Assuming thrusters 2 and 3 contribute to heave
+    # M3 -> + , M4 -> - , M5 -> + => go up
     heave_thrust_component = z * THRUSTER_MAX_OUTPUT
     thrusters[3] += heave_thrust_component
-    thrusters[4] += heave_thrust_component
+    thrusters[4] -= heave_thrust_component
     thrusters[5] += heave_thrust_component
 
     # 3. Yaw (Rotation - Yaw)
@@ -86,9 +88,11 @@ def calculate_thruster_outputs(x: float, y: float, z: float, yaw: float) -> list
     yaw_thrust_component = yaw * THRUSTER_MAX_OUTPUT
     # Example: Differential thrust on forward thrusters for yaw
     # Port thruster more forward for right turn (positive yaw)
-    thrusters[0] += yaw_thrust_component
     # Starboard thruster more reverse for right turn
+    # M1 -> - , M2 -> - , M3 -> + => rotate right
+    thrusters[0] -= yaw_thrust_component
     thrusters[1] -= yaw_thrust_component
+    thrusters[2] += yaw_thrust_component
 
     # (Alternative or additional yaw using dedicated thrusters 4 and 5)
     # If thrusters 4 and 5 are horizontal and opposing for yaw:
@@ -102,15 +106,18 @@ def calculate_thruster_outputs(x: float, y: float, z: float, yaw: float) -> list
         sway_thrust_component = y * THRUSTER_MAX_OUTPUT
         # Example: Thrusters 4 (port side) and 5 (starboard side) push in the same direction for sway.
         # To strafe right (positive y), both might push right.
-        thrusters[4] += 0
-        thrusters[5] += 0
+        if y > 0:
+            thrusters[1] -= sway_thrust_component
+            thrusters[2] -= sway_thrust_component
+        elif y < 0:
+            thrusters[2] += sway_thrust_component
+            thrusters[3] += sway_thrust_component
 
     # Normalize/Clamp thruster outputs to be within [-THRUSTER_MAX_OUTPUT, THRUSTER_MAX_OUTPUT]
     # A more sophisticated approach involves scaling down all thruster values proportionally
     # if any single thruster command exceeds the maximum, to maintain the desired maneuver shape.
 
     # Simple clamping:
-    print(f"Thruster raw values before clamping: {thrusters}")
     scaled_thrusters_int = []
     for t_val in thrusters:
         clamped_val = max(-THRUSTER_MAX_OUTPUT,
