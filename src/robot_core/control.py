@@ -30,6 +30,9 @@ except ImportError:
 # For simplicity, let's assume thruster outputs are scaled from -100 to 100.
 # This would be defined by your MotorController's expected input.
 THRUSTER_MAX_OUTPUT = 100
+SCALE = 1.0
+TILT = 0.0
+BIAS_HEAVE = 0.0  # Bias for heave to counteract buoyancy, if needed
 
 
 logger = log.getLogger(__name__)
@@ -40,7 +43,7 @@ logger.info(
     f"ROVControlSystem initialized for {num_thrusters} thrusters.")
 
 
-def calculate_thruster_outputs(x: float, y: float, z: float, yaw: float) -> list[int]:
+def calculate_thruster_outputs(x: float, y: float, z: float, yaw: float, gear_up: bool, gear_down: bool, tilt_up: bool, tilt_down: bool, heave_up: bool, heave_down: bool, reset: bool) -> list[int]:
     """
     Calculates individual thruster outputs based on desired movement.
     Args:
@@ -58,15 +61,47 @@ def calculate_thruster_outputs(x: float, y: float, z: float, yaw: float) -> list
 
     # --- Conceptual Thruster Mapping (Example for 6 thrusters) ---
     # Thruster IDs (indices for the output list):
-    # 0: Forward Port (Front Left)
-    # 1: Forward Starboard (Front Right)
-    # 2: Vertical Port (Mid Left)
-    # 3: Vertical Starboard (Mid Right)
-    # 4: Yaw/Strafe Port (Rear Left or dedicated strafe)
-    # 5: Yaw/Strafe Starboard (Rear Right or dedicated strafe)
+    # 0: Forward Starboard (Left side when facing forward)
+    # 1: Forward Starboard (Right side when facing forward)
+    # 2: Horizontal Port (Front side horizontal thruster)
+    # 3: Vertical Starboard (Right side vertical thruster)
+    # 4: Vertical Starboard (Left side for vertical thruster)
+    # 5: Vertical Port (Back side for vertical thruster)
 
     # Use float for intermediate calculations
     thrusters = [0.0] * num_thrusters
+
+    # Clamp gear between 1 and 5
+    global SCALE
+    if gear_up:
+        SCALE = min(1.0, SCALE + 0.2)  # Increase gear
+        logger.info(f"Gear increased. New SCALE: {SCALE:.2f}")
+    elif gear_down:
+        SCALE = max(0.2, SCALE - 0.2)  # Decrease gear
+        logger.info(f"Gear decreased. New SCALE: {SCALE:.2f}")
+    # Clamp tilt between -0.5 and 0.5
+    global TILT
+    if tilt_up:
+        TILT = min(0.5, TILT + 0.1)  # Increase tilt
+        logger.info(f"Tilt increased. New TILT: {TILT:.2f}")
+    elif tilt_down:
+        TILT = max(-0.5, TILT - 0.1)  # Decrease tilt
+        logger.info(f"Tilt decreased. New TILT: {TILT:.2f}")
+    # Clamp heave bias between -0.5 and 0.5
+    global BIAS_HEAVE
+    if heave_up:
+        BIAS_HEAVE = min(0.5, BIAS_HEAVE + 0.1)  # Increase heave bias
+        logger.info(f"Heave bias increased. New BIAS_HEAVE: {BIAS_HEAVE:.2f}")
+    elif heave_down:
+        BIAS_HEAVE = max(-0.5, BIAS_HEAVE - 0.1)  # Decrease heave bias
+        logger.info(f"Heave bias decreased. New BIAS_HEAVE: {BIAS_HEAVE:.2f}")
+
+    # Reset all thrusters to zero if requested
+    if reset:
+        SCALE = 1.0
+        TILT = 0.0
+        BIAS_HEAVE = 0.0
+        logger.info("Thrusters reset to zero. SCALE and TILT set to default.")
 
     # 1. Surge (Forward/Backward - X)
     # Assuming thrusters 0 and 1 contribute to surge
@@ -78,7 +113,7 @@ def calculate_thruster_outputs(x: float, y: float, z: float, yaw: float) -> list
     # 2. Heave (Up/Down - Z)
     # Assuming thrusters 2 and 3 contribute to heave
     # M3 -> + , M4 -> - , M5 -> + => go up
-    heave_thrust_component = z * THRUSTER_MAX_OUTPUT
+    heave_thrust_component = (z + BIAS_HEAVE) * THRUSTER_MAX_OUTPUT
     thrusters[3] += heave_thrust_component
     thrusters[4] -= heave_thrust_component
     thrusters[5] += heave_thrust_component
@@ -113,6 +148,11 @@ def calculate_thruster_outputs(x: float, y: float, z: float, yaw: float) -> list
             thrusters[2] += sway_thrust_component
             thrusters[3] += sway_thrust_component
 
+    # 5. Apply tilt adjustment to vertical thrusters
+    thrusters[3] += TILT * THRUSTER_MAX_OUTPUT
+    thrusters[4] -= TILT * THRUSTER_MAX_OUTPUT
+    thrusters[5] -= TILT * THRUSTER_MAX_OUTPUT
+
     # Normalize/Clamp thruster outputs to be within [-THRUSTER_MAX_OUTPUT, THRUSTER_MAX_OUTPUT]
     # A more sophisticated approach involves scaling down all thruster values proportionally
     # if any single thruster command exceeds the maximum, to maintain the desired maneuver shape.
@@ -122,11 +162,12 @@ def calculate_thruster_outputs(x: float, y: float, z: float, yaw: float) -> list
     for t_val in thrusters:
         clamped_val = max(-THRUSTER_MAX_OUTPUT,
                           min(THRUSTER_MAX_OUTPUT, t_val))
+        clamped_val *= SCALE  # Apply gear scaling
         # Round before converting to int
         scaled_thrusters_int.append(int(round(clamped_val)))
 
     logger.debug(
-        f"Input: x={x:.2f},y={y:.2f},z={z:.2f},yaw={yaw:.2f} -> Raw Thrusters: {[f'{t:.2f}' for t in thrusters]} -> Scaled Int: {scaled_thrusters_int}")
+        f"Input: x={x:.2f},y={y:.2f},z={z:.2f},yaw={yaw:.2f},SCALE={SCALE:.2f} -> Raw Thrusters: {[f'{t:.2f}' for t in thrusters]} -> Scaled Int: {scaled_thrusters_int}")
     return scaled_thrusters_int
 
 

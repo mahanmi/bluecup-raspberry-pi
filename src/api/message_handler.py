@@ -28,12 +28,20 @@ async def command_ack_handler(msg: mavlink.MAVLink_command_ack_message):
 
 
 async def manual_control_handler(msg: mavlink.MAVLink_manual_control_message):
-    x=msg.x / 1000.0  # Scale from -1000 to 1000 to -1.0 to 1.0
-    y=msg.y / 1000.0  # Scale from -1000 to 1000 to -1.0 to 1.0
-    z=(msg.z - 500) / 500.0  # Scale from 0 to 1000 to -1.0 to 1.0
-    yaw=msg.r / 1000.0  # Scale from -1000 to 1000 to -1.0 to 1.0
-    robot.set_movement_targets(x=x, y=y, z=z, yaw=yaw)
-    
+    x = msg.x / 1000.0  # Scale from -1000 to 1000 to -1.0 to 1.0
+    y = msg.y / 1000.0  # Scale from -1000 to 1000 to -1.0 to 1.0
+    z = (msg.z - 500) / 500.0  # Scale from 0 to 1000 to -1.0 to 1.0
+    yaw = msg.r / 1000.0  # Scale from -1000 to 1000 to -1.0 to 1.0
+    gear_up = msg.dpad_right == 1
+    gear_down = msg.dpad_left == 1
+    tilt_up = msg.dpad_up == 1
+    tilt_down = msg.dpad_down == 1
+    heave_up = msg.r2 == 1
+    heave_down = msg.l2 == 1
+    reset = msg.options == 1
+    robot.set_movement_targets(
+        x=x, y=y, z=z, yaw=yaw, gear_up=gear_up, gear_down=gear_down, tilt_up=tilt_up, tilt_down=tilt_down, heave_up=heave_up, heave_down=heave_down, reset=reset)
+
     pass
 
 

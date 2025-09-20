@@ -114,7 +114,7 @@ def disarm() -> bool:
     return True
 
 
-def set_movement_targets(x: float, y: float, z: float, yaw: float):
+def set_movement_targets(x: float, y: float, z: float, yaw: float, gear_up: bool = False, gear_down: bool = False, tilt_up: bool = False, tilt_down: bool = False, heave_up: bool = False, heave_down: bool = False, reset: bool = False):
     """
     Sets the desired movement targets for the ROV.
     Args:
@@ -127,13 +127,13 @@ def set_movement_targets(x: float, y: float, z: float, yaw: float):
     current_target_movement = {"x": x, "y": y, "z": z, "yaw": yaw}
     logger.debug(
         f"Movement targets set: {current_target_movement}")
-    
+
     print(f"x={x} y={y} z={z} yaw={yaw}")
-        
+
     if is_armed and communication.is_connected():
         thruster_outputs = control.calculate_thruster_outputs(
-            x, y, z, yaw
-        )        
+            x, y, z, yaw, gear_up, gear_down, tilt_up, tilt_down, heave_up, heave_down, reset
+        )
         print(f"Calculated thruster outputs: {thruster_outputs}")
         current_thruster_outputs = thruster_outputs
         # Assumes MotorController has this
@@ -278,7 +278,8 @@ if __name__ == "__main__":
             print(f"Initial State: {get_current_state()}")
 
             print("\nSetting movement: Forward 0.5")
-            set_movement_targets(x=0.5, y=0.0, z=0.0, yaw=0.0)
+            set_movement_targets(x=0.5, y=0.0, z=0.0, yaw=0.0, gear_up=False, gear_down=False,
+                                 tilt_up=False, tilt_down=False, heave_up=False, heave_down=False, reset=False)
             # Allow time for command to be processed notionally
             time.sleep(0.1)
             print(f"State after move command: {get_current_state()}")
