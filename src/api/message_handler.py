@@ -17,6 +17,17 @@ from . import command_handler
 mission_request_retries = 0
 K_MODE_MANUAL = 0b0000000000000010
 
+# Button state tracking flags
+button_states = {
+    'gear_up': False,
+    'gear_down': False,
+    'tilt_up': False,
+    'tilt_down': False,
+    'heave_up': False,
+    'heave_down': False,
+    'reset': False
+}
+
 
 async def command_recv_handler(msg: mavlink.MAVLink_command_long_message | mavlink.MAVLink_command_int_message):
     if msg.command in command_handler.handlers:
@@ -28,17 +39,31 @@ async def command_ack_handler(msg: mavlink.MAVLink_command_ack_message):
 
 
 async def manual_control_handler(msg: mavlink.MAVLink_manual_control_message):
+    global button_states
+    
     x = msg.x / 1000.0  # Scale from -1000 to 1000 to -1.0 to 1.0
     y = msg.y / 1000.0  # Scale from -1000 to 1000 to -1.0 to 1.0
     z = (msg.z - 500) / 500.0  # Scale from 0 to 1000 to -1.0 to 1.0
     yaw = msg.r / 1000.0  # Scale from -1000 to 1000 to -1.0 to 1.0
-    gear_up = msg.dpad_right == 1
-    gear_down = msg.dpad_left == 1
-    tilt_up = msg.dpad_up == 1
-    tilt_down = msg.dpad_down == 1
-    heave_up = msg.r2 == 1
-    heave_down = msg.l2 == 1
-    reset = msg.options == 1
+    
+    # Check for button press (transition from False to True)
+    gear_up = msg.dpad_right == 1 and not button_states['gear_up']
+    gear_down = msg.dpad_left == 1 and not button_states['gear_down']
+    tilt_up = msg.dpad_up == 1 and not button_states['tilt_up']
+    tilt_down = msg.dpad_down == 1 and not button_states['tilt_down']
+    heave_up = msg.r2 == 1 and not button_states['heave_up']
+    heave_down = msg.l2 == 1 and not button_states['heave_down']
+    reset = msg.options == 1 and not button_states['reset']
+    
+    # Update button states
+    button_states['gear_up'] = msg.dpad_right == 1
+    button_states['gear_down'] = msg.dpad_left == 1
+    button_states['tilt_up'] = msg.dpad_up == 1
+    button_states['tilt_down'] = msg.dpad_down == 1
+    button_states['heave_up'] = msg.r2 == 1
+    button_states['heave_down'] = msg.l2 == 1
+    button_states['reset'] = msg.options == 1
+    
     robot.set_movement_targets(
         x=x, y=y, z=z, yaw=yaw, gear_up=gear_up, gear_down=gear_down, tilt_up=tilt_up, tilt_down=tilt_down, heave_up=heave_up, heave_down=heave_down, reset=reset)
 
