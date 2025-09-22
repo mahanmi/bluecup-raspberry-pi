@@ -30,7 +30,7 @@ except ImportError:
 # For simplicity, let's assume thruster outputs are scaled from -100 to 100.
 # This would be defined by your MotorController's expected input.
 THRUSTER_MAX_OUTPUT = 100
-SCALE = 1.0
+SCALE = 0.8  # Overall speed scaling factor (gear)
 TILT = 0.0
 BIAS_HEAVE = 0.0  # Bias for heave to counteract buoyancy, if needed
 
@@ -98,7 +98,7 @@ def calculate_thruster_outputs(x: float, y: float, z: float, yaw: float, gear_up
 
     # Reset all thrusters to zero if requested
     if reset:
-        SCALE = 1.0
+        SCALE = 0.8
         TILT = 0.0
         BIAS_HEAVE = 0.0
         logger.info("Thrusters reset to zero. SCALE and TILT set to default.")
@@ -148,7 +148,11 @@ def calculate_thruster_outputs(x: float, y: float, z: float, yaw: float, gear_up
             thrusters[1] -= sway_thrust_component
             thrusters[2] -= sway_thrust_component
 
-    # 5. Apply tilt adjustment to vertical thrusters
+    # Apply gear scaling first (before tilt and bias adjustments)
+    for i in range(len(thrusters)):
+        thrusters[i] *= SCALE
+
+    # 5. Apply tilt adjustment to vertical thrusters (after scaling, so tilt is not affected by gear)
     thrusters[3] += TILT * THRUSTER_MAX_OUTPUT
     thrusters[4] -= TILT * THRUSTER_MAX_OUTPUT
     thrusters[5] -= TILT * THRUSTER_MAX_OUTPUT
@@ -162,7 +166,6 @@ def calculate_thruster_outputs(x: float, y: float, z: float, yaw: float, gear_up
     for t_val in thrusters:
         clamped_val = max(-THRUSTER_MAX_OUTPUT,
                           min(THRUSTER_MAX_OUTPUT, t_val))
-        clamped_val *= SCALE  # Apply gear scaling
         # Round before converting to int
         scaled_thrusters_int.append(int(round(clamped_val)))
 
