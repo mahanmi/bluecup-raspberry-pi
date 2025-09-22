@@ -49,9 +49,14 @@ roll = 0.0
 pitch = 0.0
 yaw = 0.0
 
-lat = 31.839417
-lon = 54.358292
-alt = 10.0
+# GPS Data
+gps_data = {
+    "lat": 31.839417,
+    "lon": 54.358292,
+    "alt": 10.0,
+    "fix_type": 0,
+    "satellites_visible": 255
+}
 # Target normalized (-1 to 1)
 current_target_movement = {
     "x": 0.0, "y": 0.0, "z": 0.0, "yaw": 0.0}
@@ -142,6 +147,199 @@ def set_movement_targets(x: float, y: float, z: float, yaw: float, gear_up: bool
         motors.stop_all_motors()  # Ensure motors are stopped if disarmed
     else:
         logger.warning("Cannot apply movement: ROV not connected.")
+
+
+def get_fix_type(gga_data):
+    """
+    Convert GPS quality to MAVLink fix type.
+
+    Args:
+        gga_data (dict): Parsed GGA sentence data
+
+    Returns:
+        int: MAVLink GPS fix type
+    """
+    if not gga_data:
+        return 0  # GPS_FIX_TYPE_NO_GPS
+
+    quality = gga_data.get('quality', 0)
+    if quality == 0:
+        return 1  # GPS_FIX_TYPE_NO_FIX
+    elif quality == 1:
+        return 3  # GPS_FIX_TYPE_3D_FIX
+    elif quality == 2:
+        return 4  # GPS_FIX_TYPE_DGPS
+    elif quality >= 4:
+        return 6  # GPS_FIX_TYPE_RTK_FIXED
+    else:
+        return 3  # Default to 3D fix
+
+
+def get_mavlink_gps_params(gga_data=None, rmc_data=None):
+    """
+    Extract all possible MAVLink GPS parameters from GNSS data.
+
+    Args:
+        gga_data (dict): Parsed GGA sentence data
+        rmc_data (dict): Parsed RMC sentence data
+
+    Returns:
+        dict: MAVLink GPS parameters
+    """
+    # Use the most recent valid data
+    current_data = gga_data or rmc_data
+
+    if not current_data:
+        return {
+            'fix_type': 0,  # No GPS
+            'lat': 0,
+            'lon': 0,
+            'alt': 0,
+            'eph': 65535,
+            'epv': 65535,
+            'vel': 65535,
+            'cog': 65535,
+            'satellites_visible': 255,
+            'alt_ellipsoid': 0,
+            'h_acc': 0,
+            'v_acc': 0,
+            'vel_acc': 0,
+            'hdg_acc': 0,
+            'yaw': 65535
+        }
+
+    # Extract available parameters
+    params = {
+        'lat': int(current_data.get('latitude', 0) * 1e7),
+        'lon': int(current_data.get('longitude', 0) * 1e7),
+        'alt_ellipsoid': 0,
+        'h_acc': 0,
+        'v_acc': 0,
+        'vel_acc': 0,
+        'hdg_acc': 0,
+        'yaw': 65535
+    }
+
+    # GGA-specific parameters
+    if gga_data:
+        params.update({
+            'fix_type': get_fix_type(gga_data),
+            'alt': int(gga_data.get('altitude', 0) * 1000),  # m to mm
+            'eph': int(gga_data.get('hdop', 65535) * 100) if gga_data.get('hdop') else 65535,
+            'epv': 65535,  # Not available in basic NMEA
+            'satellites_visible': gga_data.get('satellites', 255)
+        })
+    else:
+        params.update({
+            'fix_type': 1 if current_data else 0,
+            'alt': 0,
+            'eph': 65535,
+            'epv': 65535,
+            'satellites_visible': 255
+        })
+
+    # RMC-specific parameters
+    if rmc_data:
+        params.update({
+            # knots to cm/s
+            'vel': int(rmc_data.get('speed_knots', 0) * 51.44),
+            'cog': int(rmc_data.get('course', 65535) * 100) if rmc_data.get('course') else 65535
+        })
+    else:
+        params.update({
+            'vel': 65535,
+            'cog': 65535
+        })
+
+    return params
+
+
+def get_comprehensive_gnss_data(timeout_attempts=20):
+    """
+    Get comprehensive GNSS data from both GGA and RMC sentences.
+
+    Args:
+        timeout_attempts (int): Number of attempts to read valid data
+
+    Returns:
+        tuple: (gga_data, rmc_data) or (None, None) if no valid data
+    """
+    try:
+        gga_data = None
+        rmc_data = None
+
+        for attempt in range(timeout_attempts):
+            try:
+                # Try to get GGA data first
+                if not gga_data:
+                    gga_attempt = gnss.get_gnss_data(timeout_attempts=5)
+                    if gga_attempt and gga_attempt.get('sentence_type') == 'GGA':
+                        gga_data = gga_attempt
+
+                # Try to get RMC data
+                if not rmc_data:
+                    rmc_attempt = gnss.get_detailed_gnss_data(
+                        timeout_attempts=5)
+                    if rmc_attempt and rmc_attempt.get('sentence_type') == 'RMC':
+                        rmc_data = rmc_attempt
+
+                # Return when we have at least one valid sentence
+                if gga_data or rmc_data:
+                    logger.info(
+                        f"GNSS data collected - GGA: {gga_data is not None}, RMC: {rmc_data is not None}")
+                    return gga_data, rmc_data
+
+            except Exception as e:
+                logger.error(f"Error processing GNSS data: {e}")
+                continue
+
+        logger.warning(f"No valid GNSS data after {timeout_attempts} attempts")
+        return None, None
+
+    except Exception as e:
+        logger.error(f"Error in get_comprehensive_gnss_data: {e}")
+        return None, None
+
+
+def update_gps_data():
+    """
+    Updates the GPS data from the GNSS module using comprehensive data collection.
+    """
+    global gps_data
+    if not communication.is_connected():
+        logger.warning("Cannot update GPS: ROV not connected.")
+        return
+
+    # Get comprehensive GNSS data (both GGA and RMC)
+    gga_data, rmc_data = get_comprehensive_gnss_data()
+
+    if gga_data or rmc_data:
+        # Get MAVLink-compatible parameters
+        mavlink_params = get_mavlink_gps_params(gga_data, rmc_data)
+
+        # Update global gps_data with new structure
+        gps_data.update({
+            # Convert back to degrees for internal use
+            "lat": mavlink_params['lat'] / 1e7,
+            # Convert back to degrees for internal use
+            "lon": mavlink_params['lon'] / 1e7,
+            # Convert back to meters for internal use
+            "alt": mavlink_params['alt'] / 1000,
+            "fix_type": mavlink_params['fix_type'],
+            "satellites_visible": mavlink_params['satellites_visible'],
+            "hdop": mavlink_params['eph'] / 100 if mavlink_params['eph'] != 65535 else None,
+            # cm/s to km/h
+            "speed_kmh": mavlink_params['vel'] * 0.036 if mavlink_params['vel'] != 65535 else None,
+            "course": mavlink_params['cog'] / 100 if mavlink_params['cog'] != 65535 else None,
+            # Store MAVLink-ready parameters for message_builder
+            "mavlink_params": mavlink_params
+        })
+
+        logger.debug(
+            f"GPS data updated: lat={gps_data['lat']:.6f}, lon={gps_data['lon']:.6f}, fix_type={gps_data['fix_type']}")
+    else:
+        gps_data["fix_type"] = 0  # No fix
+        logger.warning("Failed to retrieve GPS data.")
 
 
 def update_telemetry(force_update=False):
@@ -248,6 +446,7 @@ def start():
     try:
         while True:
             time.sleep(0.05)
+            update_gps_data()
             update_telemetry()
             state = get_current_state()
             imu = state['telemetry'].get("imu", {}) or {}

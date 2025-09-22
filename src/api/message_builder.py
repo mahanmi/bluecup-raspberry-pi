@@ -64,25 +64,48 @@ async def send_raw_imu():
 # temperature ++	int16_t	cdegC	Temperature, 0: IMU does not provide temperature values. If the IMU is at 0C it must send 1 (0.01C).
 
 async def send_gps_raw_int():
-    await client.mav.gps_raw_int_send(
-        time_usec=client.boot_time_usec(),
-        fix_type=0,  # change this based on your gps state
-        lat=int(robot.lat*1e7),
-        lon=int(robot.lon*1e7),
-        alt=int(robot.alt*1e3),
-        eph=65535,
-        epv=65535,
-        vel=65535,
-        cog=65535,
-        satellites_visible=255,
-        alt_ellipsoid=0,
-        h_acc=0,
-        v_acc=0,
-        vel_acc=0,
-        hdg_acc=0,
-        yaw=65535
 
-    )
+    # Use enhanced GPS parameters if available
+    if "mavlink_params" in robot.gps_data and robot.gps_data["mavlink_params"]:
+        params = robot.gps_data["mavlink_params"]
+        await client.mav.gps_raw_int_send(
+            time_usec=client.boot_time_usec(),
+            fix_type=params["fix_type"],
+            lat=params["lat"],
+            lon=params["lon"],
+            alt=params["alt"],
+            eph=params["eph"],
+            epv=params["epv"],
+            vel=params["vel"],
+            cog=params["cog"],
+            satellites_visible=params["satellites_visible"],
+            alt_ellipsoid=params["alt_ellipsoid"],
+            h_acc=params["h_acc"],
+            v_acc=params["v_acc"],
+            vel_acc=params["vel_acc"],
+            hdg_acc=params["hdg_acc"],
+            yaw=params["yaw"]
+        )
+    else:
+        # Fallback to basic GPS data
+        await client.mav.gps_raw_int_send(
+            time_usec=client.boot_time_usec(),
+            fix_type=robot.gps_data["fix_type"],
+            lat=int(robot.gps_data["lat"]*1e7),
+            lon=int(robot.gps_data["lon"]*1e7),
+            alt=int(robot.gps_data["alt"]*1e3),
+            eph=65535,
+            epv=65535,
+            vel=65535,
+            cog=65535,
+            satellites_visible=robot.gps_data["satellites_visible"],
+            alt_ellipsoid=0,
+            h_acc=0,
+            v_acc=0,
+            vel_acc=0,
+            hdg_acc=0,
+            yaw=65535
+        )
 
 
 # fix_type	uint8_t			GPS_FIX_TYPE	GPS fix type.
@@ -245,9 +268,9 @@ async def send_ekf_status_report():
 async def send_global_position_int():
     await client.mav.global_position_int_send(
         time_boot_ms=client.boot_time_ms(),
-        lat=int(robot.lat*1e7),
-        lon=int(robot.lon*1e7),
-        alt=int(robot.alt*1e3),
+        lat=int(robot.gps_data['lat']*1e7),
+        lon=int(robot.gps_data['lon']*1e7),
+        alt=int(robot.gps_data['alt']*1e3),
         relative_alt=0,
         vx=0,
         vy=0,
