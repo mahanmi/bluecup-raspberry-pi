@@ -4,9 +4,9 @@ After=multi-user.target
 
 [Service]
 Type=simple
-WorkingDirectory=/home/user/work
-ExecStart=/home/user/work/venv/bin/python /home/user/work/main.py
-User=user
+WorkingDirectory=/home/mahan/bluecup-raspberry-pi/src/
+ExecStart=/home/mahan/bluecup-raspberry-pi/.venv/bin/python /home/mahan/bluecup-raspberry-pi/src/main.py
+User=mahan
 
 # Always restart
 Restart=always
