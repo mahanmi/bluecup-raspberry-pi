@@ -1,6 +1,10 @@
 import asyncio
 import sys
 import os
+import logging
+
+# Configure logger for this module
+logger = logging.getLogger(__name__)
 
 # Smart import strategy - try src. prefix first, then without
 try:
@@ -103,25 +107,26 @@ async def manual_control_handler(msg: mavlink.MAVLink_manual_control_message):
     button_states['led_pulse'] = msg.l1 == 1
     button_states['led_pwm_freq'] = msg.r1 == 1
 
-    # Handle LED controls
+    # Handle LED controls (including reset)
     await handle_led_controls(led_toggle, led_increase_brightness, led_decrease_brightness,
-                              led_strobe, led_pulse, led_pwm_freq)
+                              led_strobe, led_pulse, led_pwm_freq, reset)
 
     pass
 
 
 async def handle_led_controls(led_toggle, led_increase_brightness, led_decrease_brightness,
-                              led_strobe, led_pulse, led_pwm_freq):
+                              led_strobe, led_pulse, led_pwm_freq, led_reset):
     """
     Comprehensive LED control handler with advanced features
 
     Button Mapping:
     - Square (led_toggle): Toggle main light on/off
-    - Triangle (led_increase_brightness): Increase brightness by 10%
-    - Cross (led_decrease_brightness): Decrease brightness by 10%
+    - Triangle (led_increase_brightness): Increase brightness by 20%
+    - Cross (led_decrease_brightness): Decrease brightness by 20%
     - Circle (led_strobe): Toggle strobe mode
     - L1 (led_pulse): Toggle pulse mode
     - R1 (led_pwm_freq): Cycle through PWM frequencies (low/medium/high)
+    - Options (led_reset): Reset LED system to default state
     """
     global led_system
 
@@ -130,8 +135,26 @@ async def handle_led_controls(led_toggle, led_increase_brightness, led_decrease_
         if not light.lights_initialized:
             success = light.initialize_lights()
             if not success:
-                print("Failed to initialize LED system")
+                logger.error("Failed to initialize LED system")
                 return
+
+        # Handle LED reset (Options button) - Process first to override other states
+        if led_reset:
+            # Stop all effects and turn off lights
+            light.main_light_stop_effects()
+            light.main_light_off()
+            
+            # Reset PWM frequency to default (medium = 1kHz)
+            light.set_main_light_pwm_frequency('medium')
+            
+            # Reset LED system state to defaults
+            led_system['is_on'] = False
+            led_system['current_brightness'] = 0.6  # Default 60% brightness
+            led_system['current_mode'] = 'normal'
+            led_system['current_pwm_index'] = 1  # Medium frequency
+            
+            logger.info("LED: System reset to defaults (OFF, 60% brightness, 1kHz PWM, normal mode)")
+            return  # Exit early after reset
 
         # Handle LED toggle (Square button)
         if led_toggle:
@@ -141,15 +164,15 @@ async def handle_led_controls(led_toggle, led_increase_brightness, led_decrease_
                 light.main_light_off()
                 led_system['is_on'] = False
                 led_system['current_mode'] = 'normal'
-                print("LED: Main light OFF")
+                logger.info("LED: Main light OFF")
             else:
                 # Turn on at current brightness or default
-                brightness = led_system['current_brightness'] if led_system['current_brightness'] > 0 else 0.5
+                brightness = led_system['current_brightness'] if led_system['current_brightness'] > 0 else 0.6
                 light.main_light_on(brightness)
                 led_system['is_on'] = True
                 led_system['current_brightness'] = brightness
                 led_system['current_mode'] = 'normal'
-                print(f"LED: Main light ON at {brightness:.1%} brightness")
+                logger.info(f"LED: Main light ON at {brightness:.1%} brightness")
 
         # Handle brightness increase (Triangle button)
         if led_increase_brightness and led_system['is_on']:
@@ -161,9 +184,9 @@ async def handle_led_controls(led_toggle, led_increase_brightness, led_decrease_
                 # If in normal mode, adjust brightness directly
                 if led_system['current_mode'] == 'normal':
                     light.main_light_brightness(new_brightness)
-                    print(f"LED: Brightness increased to {new_brightness:.1%}")
+                    logger.info(f"LED: Brightness increased to {new_brightness:.1%}")
                 else:
-                    print(
+                    logger.debug(
                         f"LED: Brightness level set to {new_brightness:.1%} (will apply when exiting effect mode)")
 
         # Handle brightness decrease (Cross button)
@@ -176,9 +199,9 @@ async def handle_led_controls(led_toggle, led_increase_brightness, led_decrease_
                 # If in normal mode, adjust brightness directly
                 if led_system['current_mode'] == 'normal':
                     light.main_light_brightness(new_brightness)
-                    print(f"LED: Brightness decreased to {new_brightness:.1%}")
+                    logger.info(f"LED: Brightness decreased to {new_brightness:.1%}")
                 else:
-                    print(
+                    logger.debug(
                         f"LED: Brightness level set to {new_brightness:.1%} (will apply when exiting effect mode)")
 
         # Handle strobe mode (Circle button)
@@ -188,7 +211,7 @@ async def handle_led_controls(led_toggle, led_increase_brightness, led_decrease_
                 light.main_light_stop_effects()
                 light.main_light_brightness(led_system['current_brightness'])
                 led_system['current_mode'] = 'normal'
-                print("LED: Strobe mode OFF")
+                logger.info("LED: Strobe mode OFF")
             else:
                 # Enter strobe mode
                 light.main_light_stop_effects()
@@ -199,7 +222,7 @@ async def handle_led_controls(led_toggle, led_increase_brightness, led_decrease_
                     off_time=0.1
                 )
                 led_system['current_mode'] = 'strobe'
-                print(
+                logger.info(
                     f"LED: Strobe mode ON at {led_system['current_brightness']:.1%} brightness")
 
         # Handle pulse mode (L1 button)
@@ -209,7 +232,7 @@ async def handle_led_controls(led_toggle, led_increase_brightness, led_decrease_
                 light.main_light_stop_effects()
                 light.main_light_brightness(led_system['current_brightness'])
                 led_system['current_mode'] = 'normal'
-                print("LED: Pulse mode OFF")
+                logger.info("LED: Pulse mode OFF")
             else:
                 # Enter pulse mode
                 light.main_light_stop_effects()
@@ -220,7 +243,7 @@ async def handle_led_controls(led_toggle, led_increase_brightness, led_decrease_
                     fade_out_time=1.0
                 )
                 led_system['current_mode'] = 'pulse'
-                print(
+                logger.info(
                     f"LED: Pulse mode ON (0.1 to {led_system['current_brightness']:.1%} brightness)")
 
         # Handle PWM frequency cycling (R1 button)
@@ -233,10 +256,10 @@ async def handle_led_controls(led_toggle, led_increase_brightness, led_decrease_
             success = light.set_main_light_pwm_frequency(new_freq)
             if success:
                 freq_hz = light.PWM_FREQUENCIES[new_freq]
-                print(
+                logger.info(
                     f"LED: PWM frequency changed to {freq_hz}Hz ({new_freq})")
             else:
-                print(f"LED: Failed to change PWM frequency to {new_freq}")
+                logger.warning(f"LED: Failed to change PWM frequency to {new_freq}")
 
         # Log current LED status periodically (every 100th call approximately)
         import random
@@ -244,11 +267,11 @@ async def handle_led_controls(led_toggle, led_increase_brightness, led_decrease_
             states = light.get_light_states()
             if states:
                 main_state = states.get('main_light', {})
-                print(f"LED Status: ON={led_system['is_on']}, Brightness={led_system['current_brightness']:.1%}, "
+                logger.debug(f"LED Status: ON={led_system['is_on']}, Brightness={led_system['current_brightness']:.1%}, "
                       f"Mode={led_system['current_mode']}, PWM={light.get_main_light_pwm_frequency()}")
 
     except Exception as e:
-        print(f"LED Control Error: {e}")
+        logger.error(f"LED Control Error: {e}")
 
 
 async def heartbeat_handler(msg: mavlink.MAVLink_heartbeat_message):
@@ -260,12 +283,12 @@ async def heartbeat_handler(msg: mavlink.MAVLink_heartbeat_message):
 async def param_request_list_handler(msg: mavlink.MAVLink_param_request_list_message):
     param_count = len(parameters)
     for index, param in enumerate(parameters):
-        print(param)
+        logger.debug(f"Sending parameter: {param}")
         await client.mav.param_value_send(**param, param_count=param_count, param_index=index)
 
 
 async def param_request_read_handler(msg: mavlink.MAVLink_param_request_read_message):
-    print(f"{msg.target_system} {msg.target_component} requested parameter {msg}")
+    logger.debug(f"{msg.target_system} {msg.target_component} requested parameter {msg}")
     param_id = msg.param_id.encode()
     if msg.target_system != client.source_system or (msg.target_component != client.source_component and msg.target_component != mavlink.MAV_COMP_ID_ALL):
         return
@@ -433,7 +456,7 @@ async def initialize_led_system():
     try:
         success = light.initialize_lights()
         if success:
-            print("LED System: Initialized successfully")
+            logger.info("LED System: Initialized successfully")
 
             # Set initial state
             led_system['is_on'] = False
@@ -441,7 +464,7 @@ async def initialize_led_system():
             led_system['current_mode'] = 'normal'
 
             # Perform startup light test
-            print("LED System: Performing startup test...")
+            logger.info("LED System: Performing startup test...")
             light.main_light_on(0.3)
             await asyncio.sleep(0.5)
             light.main_light_off()
@@ -450,26 +473,26 @@ async def initialize_led_system():
             await asyncio.sleep(0.3)
             light.main_light_off()
 
-            print("LED System: Ready for control")
+            logger.info("LED System: Ready for control")
             return True
         else:
-            print("LED System: Failed to initialize")
+            logger.error("LED System: Failed to initialize")
             return False
     except Exception as e:
-        print(f"LED System: Initialization error - {e}")
+        logger.error(f"LED System: Initialization error - {e}")
         return False
 
 
 def cleanup_led_system():
     """Cleanup LED system on shutdown"""
     try:
-        print("LED System: Shutting down...")
+        logger.info("LED System: Shutting down...")
         light.main_light_stop_effects()
         light.main_light_off()
         light.cleanup_lights()
-        print("LED System: Shutdown complete")
+        logger.info("LED System: Shutdown complete")
     except Exception as e:
-        print(f"LED System: Cleanup error - {e}")
+        logger.error(f"LED System: Cleanup error - {e}")
 
 
 def get_led_status():
@@ -486,5 +509,5 @@ def get_led_status():
         }
         return status
     except Exception as e:
-        print(f"LED System: Status error - {e}")
+        logger.error(f"LED System: Status error - {e}")
         return None

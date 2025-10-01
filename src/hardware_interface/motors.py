@@ -142,7 +142,7 @@ def stop_all_motors() -> bool:
     command = get_command()
 
     if communication.send_command(command):
-        logger.info("All motors commanded to stop.")
+        logger.debug("All motors commanded to stop.")
         return True
     else:
         logger.error("Failed to send stop all motors command.")
