@@ -6,10 +6,12 @@ import os
 try:
     from src.mission_planner import planner, missions
     from src.robot_core import robot
+    from src.hardware_interface import light
 except ImportError:
     # Running from src directory, use relative imports
     from mission_planner import planner, missions
     from robot_core import robot
+    from hardware_interface import light
 
 from .mavlink import mavlink, client, ButtonFunctions
 from . import command_handler
@@ -25,7 +27,25 @@ button_states = {
     'tilt_down': False,
     'heave_up': False,
     'heave_down': False,
-    'reset': False
+    'reset': False,
+    'led_toggle': False,
+    'led_increase_brightness': False,
+    'led_decrease_brightness': False,
+    'led_strobe': False,
+    'led_pulse': False,
+    'led_pwm_freq': False
+}
+
+# LED system state
+led_system = {
+    'is_on': False,
+    'current_brightness': 0.0,
+    'brightness_step': 0.2,  # 20% increments
+    'min_brightness': 0.2,
+    'max_brightness': 1.0,
+    'current_mode': 'normal',  # normal, strobe, pulse
+    'pwm_frequencies': ['low', 'medium', 'high'],
+    'current_pwm_index': 1  # Start with 'medium'
 }
 
 
@@ -40,12 +60,12 @@ async def command_ack_handler(msg: mavlink.MAVLink_command_ack_message):
 
 async def manual_control_handler(msg: mavlink.MAVLink_manual_control_message):
     global button_states
-    
+
     x = msg.x / 1000.0  # Scale from -1000 to 1000 to -1.0 to 1.0
     y = msg.y / 1000.0  # Scale from -1000 to 1000 to -1.0 to 1.0
     z = (msg.z - 500) / 500.0  # Scale from 0 to 1000 to -1.0 to 1.0
     yaw = msg.r / 1000.0  # Scale from -1000 to 1000 to -1.0 to 1.0
-    
+
     # Check for button press (transition from False to True)
     gear_up = msg.dpad_right == 1 and not button_states['gear_up']
     gear_down = msg.dpad_left == 1 and not button_states['gear_down']
@@ -54,7 +74,7 @@ async def manual_control_handler(msg: mavlink.MAVLink_manual_control_message):
     heave_up = msg.r2 == 1 and not button_states['heave_up']
     heave_down = msg.l2 == 1 and not button_states['heave_down']
     reset = msg.options == 1 and not button_states['reset']
-    
+
     # Update button states
     button_states['gear_up'] = msg.dpad_right == 1
     button_states['gear_down'] = msg.dpad_left == 1
@@ -63,11 +83,172 @@ async def manual_control_handler(msg: mavlink.MAVLink_manual_control_message):
     button_states['heave_up'] = msg.r2 == 1
     button_states['heave_down'] = msg.l2 == 1
     button_states['reset'] = msg.options == 1
-    
+
     robot.set_movement_targets(
         x=x, y=y, z=z, yaw=yaw, gear_up=gear_up, gear_down=gear_down, tilt_up=tilt_up, tilt_down=tilt_down, heave_up=heave_up, heave_down=heave_down, reset=reset)
 
+    # LED Control System - Enhanced button mapping
+    led_toggle = msg.square == 1 and not button_states['led_toggle']
+    led_increase_brightness = msg.triangle == 1 and not button_states['led_increase_brightness']
+    led_decrease_brightness = msg.cross == 1 and not button_states['led_decrease_brightness']
+    led_strobe = msg.circle == 1 and not button_states['led_strobe']
+    led_pulse = msg.l1 == 1 and not button_states['led_pulse']
+    led_pwm_freq = msg.r1 == 1 and not button_states['led_pwm_freq']
+
+    # Update button states
+    button_states['led_toggle'] = msg.square == 1
+    button_states['led_increase_brightness'] = msg.triangle == 1
+    button_states['led_decrease_brightness'] = msg.cross == 1
+    button_states['led_strobe'] = msg.circle == 1
+    button_states['led_pulse'] = msg.l1 == 1
+    button_states['led_pwm_freq'] = msg.r1 == 1
+
+    # Handle LED controls
+    await handle_led_controls(led_toggle, led_increase_brightness, led_decrease_brightness,
+                              led_strobe, led_pulse, led_pwm_freq)
+
     pass
+
+
+async def handle_led_controls(led_toggle, led_increase_brightness, led_decrease_brightness,
+                              led_strobe, led_pulse, led_pwm_freq):
+    """
+    Comprehensive LED control handler with advanced features
+
+    Button Mapping:
+    - Square (led_toggle): Toggle main light on/off
+    - Triangle (led_increase_brightness): Increase brightness by 10%
+    - Cross (led_decrease_brightness): Decrease brightness by 10%
+    - Circle (led_strobe): Toggle strobe mode
+    - L1 (led_pulse): Toggle pulse mode
+    - R1 (led_pwm_freq): Cycle through PWM frequencies (low/medium/high)
+    """
+    global led_system
+
+    try:
+        # Initialize lights if not already done
+        if not light.lights_initialized:
+            success = light.initialize_lights()
+            if not success:
+                print("Failed to initialize LED system")
+                return
+
+        # Handle LED toggle (Square button)
+        if led_toggle:
+            if led_system['is_on']:
+                # Turn off and stop any effects
+                light.main_light_stop_effects()
+                light.main_light_off()
+                led_system['is_on'] = False
+                led_system['current_mode'] = 'normal'
+                print("LED: Main light OFF")
+            else:
+                # Turn on at current brightness or default
+                brightness = led_system['current_brightness'] if led_system['current_brightness'] > 0 else 0.5
+                light.main_light_on(brightness)
+                led_system['is_on'] = True
+                led_system['current_brightness'] = brightness
+                led_system['current_mode'] = 'normal'
+                print(f"LED: Main light ON at {brightness:.1%} brightness")
+
+        # Handle brightness increase (Triangle button)
+        if led_increase_brightness and led_system['is_on']:
+            new_brightness = min(led_system['current_brightness'] + led_system['brightness_step'],
+                                 led_system['max_brightness'])
+            if new_brightness != led_system['current_brightness']:
+                led_system['current_brightness'] = new_brightness
+
+                # If in normal mode, adjust brightness directly
+                if led_system['current_mode'] == 'normal':
+                    light.main_light_brightness(new_brightness)
+                    print(f"LED: Brightness increased to {new_brightness:.1%}")
+                else:
+                    print(
+                        f"LED: Brightness level set to {new_brightness:.1%} (will apply when exiting effect mode)")
+
+        # Handle brightness decrease (Cross button)
+        if led_decrease_brightness and led_system['is_on']:
+            new_brightness = max(led_system['current_brightness'] - led_system['brightness_step'],
+                                 led_system['min_brightness'])
+            if new_brightness != led_system['current_brightness']:
+                led_system['current_brightness'] = new_brightness
+
+                # If in normal mode, adjust brightness directly
+                if led_system['current_mode'] == 'normal':
+                    light.main_light_brightness(new_brightness)
+                    print(f"LED: Brightness decreased to {new_brightness:.1%}")
+                else:
+                    print(
+                        f"LED: Brightness level set to {new_brightness:.1%} (will apply when exiting effect mode)")
+
+        # Handle strobe mode (Circle button)
+        if led_strobe and led_system['is_on']:
+            if led_system['current_mode'] == 'strobe':
+                # Exit strobe mode
+                light.main_light_stop_effects()
+                light.main_light_brightness(led_system['current_brightness'])
+                led_system['current_mode'] = 'normal'
+                print("LED: Strobe mode OFF")
+            else:
+                # Enter strobe mode
+                light.main_light_stop_effects()
+                light.main_light_blink(
+                    on_brightness=led_system['current_brightness'],
+                    off_brightness=0.0,
+                    on_time=0.1,
+                    off_time=0.1
+                )
+                led_system['current_mode'] = 'strobe'
+                print(
+                    f"LED: Strobe mode ON at {led_system['current_brightness']:.1%} brightness")
+
+        # Handle pulse mode (L1 button)
+        if led_pulse and led_system['is_on']:
+            if led_system['current_mode'] == 'pulse':
+                # Exit pulse mode
+                light.main_light_stop_effects()
+                light.main_light_brightness(led_system['current_brightness'])
+                led_system['current_mode'] = 'normal'
+                print("LED: Pulse mode OFF")
+            else:
+                # Enter pulse mode
+                light.main_light_stop_effects()
+                light.main_light_pulse(
+                    min_brightness=led_system['min_brightness'],
+                    max_brightness=led_system['current_brightness'],
+                    fade_in_time=1.0,
+                    fade_out_time=1.0
+                )
+                led_system['current_mode'] = 'pulse'
+                print(
+                    f"LED: Pulse mode ON (0.1 to {led_system['current_brightness']:.1%} brightness)")
+
+        # Handle PWM frequency cycling (R1 button)
+        if led_pwm_freq:
+            # Cycle through PWM frequencies
+            led_system['current_pwm_index'] = (
+                led_system['current_pwm_index'] + 1) % len(led_system['pwm_frequencies'])
+            new_freq = led_system['pwm_frequencies'][led_system['current_pwm_index']]
+
+            success = light.set_main_light_pwm_frequency(new_freq)
+            if success:
+                freq_hz = light.PWM_FREQUENCIES[new_freq]
+                print(
+                    f"LED: PWM frequency changed to {freq_hz}Hz ({new_freq})")
+            else:
+                print(f"LED: Failed to change PWM frequency to {new_freq}")
+
+        # Log current LED status periodically (every 100th call approximately)
+        import random
+        if random.randint(1, 100) == 1:  # Roughly 1% chance for periodic status
+            states = light.get_light_states()
+            if states:
+                main_state = states.get('main_light', {})
+                print(f"LED Status: ON={led_system['is_on']}, Brightness={led_system['current_brightness']:.1%}, "
+                      f"Mode={led_system['current_mode']}, PWM={light.get_main_light_pwm_frequency()}")
+
+    except Exception as e:
+        print(f"LED Control Error: {e}")
 
 
 async def heartbeat_handler(msg: mavlink.MAVLink_heartbeat_message):
@@ -241,3 +422,69 @@ parameters = [
     *btn_functions(31, ButtonFunctions.KNone, ButtonFunctions.KNone),
 ]
 # fmt: on
+
+# LED System Utility Functions
+
+
+async def initialize_led_system():
+    """Initialize the LED system at startup"""
+    global led_system
+
+    try:
+        success = light.initialize_lights()
+        if success:
+            print("LED System: Initialized successfully")
+
+            # Set initial state
+            led_system['is_on'] = False
+            led_system['current_brightness'] = 0.5
+            led_system['current_mode'] = 'normal'
+
+            # Perform startup light test
+            print("LED System: Performing startup test...")
+            light.main_light_on(0.3)
+            await asyncio.sleep(0.5)
+            light.main_light_off()
+            await asyncio.sleep(0.2)
+            light.main_light_on(0.3)
+            await asyncio.sleep(0.3)
+            light.main_light_off()
+
+            print("LED System: Ready for control")
+            return True
+        else:
+            print("LED System: Failed to initialize")
+            return False
+    except Exception as e:
+        print(f"LED System: Initialization error - {e}")
+        return False
+
+
+def cleanup_led_system():
+    """Cleanup LED system on shutdown"""
+    try:
+        print("LED System: Shutting down...")
+        light.main_light_stop_effects()
+        light.main_light_off()
+        light.cleanup_lights()
+        print("LED System: Shutdown complete")
+    except Exception as e:
+        print(f"LED System: Cleanup error - {e}")
+
+
+def get_led_status():
+    """Get current LED system status"""
+    try:
+        states = light.get_light_states()
+        status = {
+            'system_initialized': light.lights_initialized,
+            'is_on': led_system['is_on'],
+            'brightness': led_system['current_brightness'],
+            'mode': led_system['current_mode'],
+            'pwm_frequency': light.get_main_light_pwm_frequency(),
+            'hardware_states': states
+        }
+        return status
+    except Exception as e:
+        print(f"LED System: Status error - {e}")
+        return None
